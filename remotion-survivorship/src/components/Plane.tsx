@@ -2,33 +2,54 @@ import React from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { COLORS } from "../theme";
 
+/**
+ * 高识别度俯视轰炸机：
+ * 左翼 / 右翼分块大面积填充，机身压在中间，四发机舱明显。
+ */
 const HOLES: Array<{ cx: number; cy: number; r: number }> = [
-  { cx: 210, cy: 118, r: 7 },
-  { cx: 248, cy: 102, r: 6 },
-  { cx: 280, cy: 130, r: 8 },
-  { cx: 318, cy: 96, r: 5 },
-  { cx: 352, cy: 124, r: 7 },
-  { cx: 390, cy: 108, r: 6 },
-  { cx: 430, cy: 136, r: 7 },
-  { cx: 468, cy: 100, r: 5 },
-  { cx: 505, cy: 122, r: 8 },
-  { cx: 240, cy: 168, r: 6 },
-  { cx: 300, cy: 176, r: 7 },
-  { cx: 360, cy: 164, r: 5 },
-  { cx: 420, cy: 180, r: 6 },
-  { cx: 480, cy: 170, r: 7 },
+  { cx: 95, cy: 110, r: 6 },
+  { cx: 130, cy: 95, r: 5 },
+  { cx: 160, cy: 125, r: 7 },
+  { cx: 110, cy: 230, r: 6 },
+  { cx: 145, cy: 250, r: 5 },
+  { cx: 175, cy: 215, r: 6 },
+  { cx: 865, cy: 110, r: 6 },
+  { cx: 830, cy: 95, r: 5 },
+  { cx: 800, cy: 125, r: 7 },
+  { cx: 850, cy: 230, r: 6 },
+  { cx: 815, cy: 250, r: 5 },
+  { cx: 785, cy: 215, r: 6 },
+  { cx: 640, cy: 155, r: 6 },
+  { cx: 675, cy: 172, r: 5 },
+  { cx: 705, cy: 160, r: 6 },
+  { cx: 655, cy: 188, r: 5 },
+  { cx: 250, cy: 105, r: 5 },
+  { cx: 710, cy: 105, r: 5 },
+  { cx: 250, cy: 235, r: 5 },
+  { cx: 710, cy: 235, r: 5 },
 ];
+
+const ENGINES = [
+  { cx: 320, cy: 108 },
+  { cx: 400, cy: 100 },
+  { cx: 560, cy: 100 },
+  { cx: 640, cy: 108 },
+];
+
+export type HighlightMode = "none" | "holes" | "engines" | "all";
 
 export const PlaneSilhouette: React.FC<{
   showHoles?: boolean;
   holeProgress?: number;
   highlightMissing?: boolean;
+  highlightMode?: HighlightMode;
   ghost?: boolean;
   scale?: number;
 }> = ({
   showHoles = true,
   holeProgress = 1,
   highlightMissing = false,
+  highlightMode = "none",
   ghost = false,
   scale = 1,
 }) => {
@@ -47,90 +68,141 @@ export const PlaneSilhouette: React.FC<{
     }),
   );
 
-  const missingPulse = interpolate(Math.sin(frame / 8), [-1, 1], [0.35, 0.9]);
+  const pulse = interpolate(Math.sin(frame / 7), [-1, 1], [0.45, 1]);
+  const stroke = ghost ? COLORS.ghost : COLORS.structure;
+  const mode = highlightMissing ? "engines" : highlightMode;
+  const engineHot = mode === "engines";
+  const holesHot = mode === "holes";
+  const allHot = mode === "all";
+  const wingFill = allHot
+    ? `rgba(126,182,255,${0.35 * pulse})`
+    : "rgba(126,182,255,0.22)";
 
   return (
     <svg
-      width={720 * scale}
-      height={280 * scale}
-      viewBox="0 0 720 280"
+      width={980 * scale}
+      height={360 * scale}
+      viewBox="0 0 980 360"
       style={{
-        opacity: ghost ? 0.45 * enter : enter,
+        opacity: (ghost ? 0.45 : 1) * enter,
         filter: ghost ? "blur(0.4px)" : undefined,
       }}
     >
       <defs>
-        <linearGradient id="wing" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={COLORS.structure} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={COLORS.structure} stopOpacity="0.05" />
-        </linearGradient>
+        <radialGradient id="holeAura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={COLORS.surprise} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={COLORS.surprise} stopOpacity="0" />
+        </radialGradient>
       </defs>
 
-      {/* fuselage */}
-      <ellipse
-        cx="360"
-        cy="140"
-        rx="210"
-        ry="42"
-        fill="url(#wing)"
-        stroke={ghost ? COLORS.ghost : COLORS.structure}
-        strokeWidth="2"
-      />
-      {/* wings */}
+      {/* LEFT WING */}
       <path
-        d="M150 140 L40 40 L170 110 L250 125 Z"
-        fill="none"
-        stroke={ghost ? COLORS.ghost : COLORS.structure}
-        strokeWidth="2"
+        d="M40 180 L120 70 L390 95 L390 265 L120 290 Z"
+        fill={wingFill}
+        stroke={stroke}
+        strokeWidth="3"
       />
+      {/* RIGHT WING */}
       <path
-        d="M570 140 L680 40 L550 110 L470 125 Z"
-        fill="none"
-        stroke={ghost ? COLORS.ghost : COLORS.structure}
-        strokeWidth="2"
+        d="M940 180 L860 70 L590 95 L590 265 L860 290 Z"
+        fill={wingFill}
+        stroke={stroke}
+        strokeWidth="3"
       />
+
+      {/* FUSELAGE */}
+      <rect
+        x="300"
+        y="145"
+        width="380"
+        height="70"
+        rx="34"
+        fill="#0B0D10"
+        stroke={stroke}
+        strokeWidth="3"
+      />
+      {/* nose */}
       <path
-        d="M150 140 L40 240 L170 170 L250 155 Z"
-        fill="none"
-        stroke={ghost ? COLORS.ghost : COLORS.structure}
-        strokeWidth="2"
-      />
-      <path
-        d="M570 140 L680 240 L550 170 L470 155 Z"
-        fill="none"
-        stroke={ghost ? COLORS.ghost : COLORS.structure}
-        strokeWidth="2"
-      />
-      {/* cockpit / engines — the "missing" lethal zones */}
-      <circle
-        cx="170"
-        cy="140"
-        r="18"
-        fill="none"
-        stroke={highlightMissing ? COLORS.danger : COLORS.line}
-        strokeWidth={highlightMissing ? 3 : 1.5}
-        opacity={highlightMissing ? missingPulse : 1}
-      />
-      <circle
-        cx="550"
-        cy="140"
-        r="18"
-        fill="none"
-        stroke={highlightMissing ? COLORS.danger : COLORS.line}
-        strokeWidth={highlightMissing ? 3 : 1.5}
-        opacity={highlightMissing ? missingPulse : 1}
+        d="M300 180 C260 180 210 165 170 180 C210 195 260 180 300 180 Z"
+        fill={
+          engineHot
+            ? `rgba(255,107,107,${0.3 * pulse})`
+            : "rgba(126,182,255,0.25)"
+        }
+        stroke={engineHot ? COLORS.danger : stroke}
+        strokeWidth={engineHot ? 3.2 : 3}
       />
       <rect
-        x="330"
-        y="118"
-        width="60"
-        height="44"
+        x="220"
+        y="162"
+        width="55"
+        height="36"
         rx="10"
-        fill="none"
-        stroke={highlightMissing ? COLORS.danger : COLORS.line}
-        strokeWidth={highlightMissing ? 3 : 1.5}
-        opacity={highlightMissing ? missingPulse : 0.8}
+        fill={
+          engineHot
+            ? `rgba(255,107,107,${0.22 * pulse})`
+            : "rgba(126,182,255,0.12)"
+        }
+        stroke={engineHot ? COLORS.danger : COLORS.line}
+        strokeWidth={engineHot ? 2.4 : 1.6}
       />
+
+      {/* TAIL */}
+      <path
+        d="M680 180 L820 95 L900 180 L820 265 Z"
+        fill={wingFill}
+        stroke={stroke}
+        strokeWidth="3"
+      />
+      <path
+        d="M760 180 L845 155 L880 180 L845 205 Z"
+        fill="rgba(126,182,255,0.35)"
+        stroke={stroke}
+        strokeWidth="2.2"
+      />
+
+      {/* 4 ENGINES */}
+      {ENGINES.map((e) => {
+        const pair = [
+          { cx: e.cx, cy: e.cy },
+          { cx: e.cx, cy: 360 - e.cy },
+        ];
+        return pair.map((eng) => (
+          <g key={`${eng.cx}-${eng.cy}`}>
+            <rect
+              x={eng.cx - 16}
+              y={eng.cy - 18}
+              width={32}
+              height={32}
+              rx={11}
+              fill={
+                engineHot
+                  ? `rgba(255,107,107,${0.32 * pulse})`
+                  : "#0B0D10"
+              }
+              stroke={engineHot ? COLORS.danger : stroke}
+              strokeWidth={engineHot ? 3.2 : 2.4}
+              opacity={engineHot ? pulse : 1}
+            />
+            <circle
+              cx={eng.cx}
+              cy={eng.cy}
+              r={8}
+              fill="none"
+              stroke={engineHot ? COLORS.danger : COLORS.line}
+              strokeWidth="1.6"
+            />
+          </g>
+        ));
+      })}
+
+      {holesHot ? (
+        <>
+          <ellipse cx="150" cy="180" rx="110" ry="95" fill="url(#holeAura)" opacity={pulse} />
+          <ellipse cx="830" cy="180" rx="110" ry="95" fill="url(#holeAura)" opacity={pulse} />
+          <ellipse cx="670" cy="180" rx="80" ry="50" fill="url(#holeAura)" opacity={pulse * 0.8} />
+        </>
+      ) : null}
 
       {showHoles &&
         HOLES.slice(0, visibleHoles).map((h, i) => (
@@ -140,7 +212,7 @@ export const PlaneSilhouette: React.FC<{
             cy={h.cy}
             r={h.r}
             fill={COLORS.surprise}
-            opacity={0.9}
+            opacity={0.95}
           />
         ))}
     </svg>
