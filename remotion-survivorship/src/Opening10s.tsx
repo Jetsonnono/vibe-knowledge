@@ -50,7 +50,7 @@ const PlaneStage: React.FC<{
   highlightMode?: HighlightMode;
 }> = ({
   children,
-  y = -48,
+  y = -24,
   showHoles = true,
   holeProgress = 1,
   highlightMode = "none",
