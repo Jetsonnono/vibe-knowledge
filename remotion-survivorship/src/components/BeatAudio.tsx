@@ -7,7 +7,17 @@ import {
   staticFile,
   useCurrentFrame,
 } from "remotion";
-import { FPS } from "../theme";
+import {
+  ASK_FROM,
+  CLOSE_FROM,
+  DURATION_FRAMES,
+  FPS,
+  OUTRO_FROM,
+  SIEVE_FROM,
+  TITLE_FROM,
+  TRANSFER_FROM,
+  GHOST_FROM,
+} from "../theme";
 
 const sfx = (name: string) => staticFile(`sfx/${name}.wav`);
 const bgmSrc = staticFile("sfx/bgm-survivorship.mp3");
@@ -24,14 +34,12 @@ const FullBgm: React.FC<{ durationInFrames: number }> = ({
     [0, 0.34, 0.34, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // ~–3dB ≈ 0.70；留白窗内不叠加 duck（impact 前 7.6–8.0s / resolve 前 50.25–50.75s）
   const duckDing = interpolate(
     frame,
     [55, 60, 72, 88],
     [1, 0.72, 0.75, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // impact：从命中后开始轻 duck，避开 7.6–8.0 轻收窗
   const duckWrong = interpolate(
     frame,
     [242, 248, 265, 285],
@@ -40,26 +48,25 @@ const FullBgm: React.FC<{ durationInFrames: number }> = ({
   );
   const duckTitle = interpolate(
     frame,
-    [28 * FPS + 6, 28 * FPS + 14, 28 * FPS + 45, 28 * FPS + 70],
+    [TITLE_FROM + 6, TITLE_FROM + 14, TITLE_FROM + 45, TITLE_FROM + 70],
     [1, 0.72, 0.76, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   const duckAsk = interpolate(
     frame,
-    [42 * FPS + 108, 42 * FPS + 115, 42 * FPS + 135, 42 * FPS + 155],
+    [ASK_FROM + 108, ASK_FROM + 115, ASK_FROM + 135, ASK_FROM + 155],
     [1, 0.72, 0.76, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // resolve：命中后轻 duck（金句段现为 50–56s）
   const duckClose = interpolate(
     frame,
-    [50 * FPS + 18, 50 * FPS + 26, 50 * FPS + 55, 50 * FPS + 85],
+    [CLOSE_FROM + 18, CLOSE_FROM + 26, CLOSE_FROM + 55, CLOSE_FROM + 85],
     [1, 0.7, 0.75, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   const duckOutro = interpolate(
     frame,
-    [56 * FPS + 4, 56 * FPS + 12, 56 * FPS + 40, 56 * FPS + 70],
+    [OUTRO_FROM + 4, OUTRO_FROM + 12, OUTRO_FROM + 40, OUTRO_FROM + 70],
     [1, 0.78, 0.8, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -93,27 +100,22 @@ export const OpeningBeatAudio: React.FC = () => {
         volume={bgmVol * duck}
         durationInFrames={10 * FPS}
       />
-      {/* 弹孔点亮轻点 */}
       {[8, 16, 24, 32, 40, 48].map((f) => (
         <Sequence key={`tick-${f}`} from={f} durationInFrames={12} layout="none">
           <Audio src={sfx("tick")} volume={0.32} />
         </Sequence>
       ))}
-      {/* 提问 */}
       <Sequence from={60} durationInFrames={45} layout="none">
         <Audio src={sfx("ding")} volume={0.28} />
       </Sequence>
-      {/* A/B/C 入场 */}
       {[72, 88, 104].map((f) => (
         <Sequence key={`opt-${f}`} from={f} durationInFrames={12} layout="none">
           <Audio src={sfx("click")} volume={0.38} />
         </Sequence>
       ))}
-      {/* 划掉多数人答案 */}
       <Sequence from={210} durationInFrames={30} layout="none">
         <Audio src={sfx("whip")} volume={0.35} />
       </Sequence>
-      {/* 「错了。」重拍 */}
       <Sequence from={240} durationInFrames={40} layout="none">
         <Audio src={sfx("impact")} volume={0.72} />
       </Sequence>
@@ -121,16 +123,13 @@ export const OpeningBeatAudio: React.FC = () => {
   );
 };
 
-/**
- * 全片 60s：完整 BGM + 卡点音效
- */
+/** 全片：完整 BGM + 卡点音效（时长跟随 DURATION_FRAMES） */
 export const FullBeatAudio: React.FC = () => {
-  const total = 60 * FPS;
+  const total = DURATION_FRAMES;
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
       <FullBgm durationInFrames={total} />
 
-      {/* —— 0–10s 开头卡点（BGM 已由 FullBgm 播，这里只挂 SFX） —— */}
       {[8, 16, 24, 32, 40, 48].map((f) => (
         <Sequence key={`tick-${f}`} from={f} durationInFrames={12} layout="none">
           <Audio src={sfx("tick")} volume={0.32} />
@@ -151,11 +150,11 @@ export const FullBeatAudio: React.FC = () => {
         <Audio src={sfx("impact")} volume={0.72} />
       </Sequence>
 
-      {/* 幽灵红圈 / 反转 */}
-      <Sequence from={10 * FPS + 40} durationInFrames={30} layout="none">
+      {/* 幽灵红圈 / 无弹孔要害 */}
+      <Sequence from={GHOST_FROM + 18} durationInFrames={28} layout="none">
         <Audio src={sfx("whoosh-soft")} volume={0.42} />
       </Sequence>
-      <Sequence from={10 * FPS + 70} durationInFrames={20} layout="none">
+      <Sequence from={GHOST_FROM + 36} durationInFrames={18} layout="none">
         <Audio src={sfx("tick")} volume={0.28} />
       </Sequence>
 
@@ -163,19 +162,19 @@ export const FullBeatAudio: React.FC = () => {
       {[18, 28, 38, 48, 58].map((off) => (
         <Sequence
           key={`sieve-${off}`}
-          from={22 * FPS + off}
+          from={SIEVE_FROM + off}
           durationInFrames={10}
           layout="none"
         >
           <Audio src={sfx("tick")} volume={0.22} />
         </Sequence>
       ))}
-      <Sequence from={22 * FPS + 70} durationInFrames={25} layout="none">
+      <Sequence from={SIEVE_FROM + 70} durationInFrames={25} layout="none">
         <Audio src={sfx("switch")} volume={0.3} />
       </Sequence>
 
       {/* 片名 */}
-      <Sequence from={28 * FPS + 8} durationInFrames={50} layout="none">
+      <Sequence from={TITLE_FROM + 8} durationInFrames={50} layout="none">
         <Audio src={sfx("chime")} volume={0.48} />
       </Sequence>
 
@@ -183,7 +182,7 @@ export const FullBeatAudio: React.FC = () => {
       {[0, 80, 160].map((off) => (
         <Sequence
           key={`tr-${off}`}
-          from={34 * FPS + off + 6}
+          from={TRANSFER_FROM + off + 6}
           durationInFrames={20}
           layout="none"
         >
@@ -193,7 +192,7 @@ export const FullBeatAudio: React.FC = () => {
       {[40, 120, 200].map((off) => (
         <Sequence
           key={`fall-${off}`}
-          from={34 * FPS + off}
+          from={TRANSFER_FROM + off}
           durationInFrames={20}
           layout="none"
         >
@@ -202,20 +201,20 @@ export const FullBeatAudio: React.FC = () => {
       ))}
 
       {/* 缺席？ */}
-      <Sequence from={42 * FPS + 110} durationInFrames={40} layout="none">
+      <Sequence from={ASK_FROM + 110} durationInFrames={40} layout="none">
         <Audio src={sfx("ding")} volume={0.4} />
       </Sequence>
 
-      {/* 金句（50–56s，段已缩短） */}
-      <Sequence from={50 * FPS + 20} durationInFrames={50} layout="none">
+      {/* 金句 */}
+      <Sequence from={CLOSE_FROM + 20} durationInFrames={50} layout="none">
         <Audio src={sfx("resolve")} volume={0.52} />
       </Sequence>
 
-      {/* 56–60s outro 收束 */}
-      <Sequence from={56 * FPS + 6} durationInFrames={40} layout="none">
+      {/* outro 收束 */}
+      <Sequence from={OUTRO_FROM + 6} durationInFrames={40} layout="none">
         <Audio src={sfx("chime")} volume={0.32} />
       </Sequence>
-      <Sequence from={56 * FPS + 55} durationInFrames={35} layout="none">
+      <Sequence from={OUTRO_FROM + 55} durationInFrames={35} layout="none">
         <Audio src={sfx("switch")} volume={0.22} />
       </Sequence>
     </AbsoluteFill>
