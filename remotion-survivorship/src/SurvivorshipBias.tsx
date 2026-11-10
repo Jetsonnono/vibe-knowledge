@@ -13,11 +13,28 @@ import { PlaneSilhouette } from "./components/Plane";
 import { CenterStage, FadeScene, Shell } from "./components/Shell";
 import { Opening10s } from "./Opening10s";
 import { sans, serif } from "./fonts";
-import { COLORS, FPS } from "./theme";
+import {
+  ASK_DUR,
+  ASK_FROM,
+  CLOSE_DUR,
+  CLOSE_FROM,
+  COLORS,
+  GHOST_DUR,
+  GHOST_FROM,
+  OPENING_DUR,
+  OUTRO_DUR,
+  OUTRO_FROM,
+  SIEVE_DUR,
+  SIEVE_FROM,
+  TITLE_DUR,
+  TITLE_FROM,
+  TRANSFER_DUR,
+  TRANSFER_FROM,
+} from "./theme";
 
 /**
- * 全片 60s · 前 10s 复用已锁定 Opening10s
- * 后 50s 体检修订：迁移居中、筛子灰影、片名去重、收束分层、段间淡入、扫描线
+ * 全片 · 前 10s 复用已锁定 Opening10s
+ * 无弹孔要害段已压到 ~4s；总长可短于 60s
  */
 
 const VITAL_RINGS = [
@@ -28,24 +45,23 @@ const VITAL_RINGS = [
   { cx: 500, cy: 95, rx: 46, ry: 52 },
 ];
 
-/** 10–22s: 同一架机叠幽灵层 + 要害红圈脉冲 */
+/** 无弹孔要害展示：叠幽灵层 + 红圈（压到 ~4s，去掉长停留） */
 const GhostRevealScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const survivorDim = interpolate(frame, [18, 50], [1, 0.48], {
+  const survivorDim = interpolate(frame, [6, 28], [1, 0.48], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const ghostIn = interpolate(frame, [28, 70], [0, 1], {
+  const ghostIn = interpolate(frame, [10, 36], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  // 红圈提前半秒出
-  const rings = interpolate(frame, [40, 70], [0, 1], {
+  const rings = interpolate(frame, [18, 40], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const pulse = interpolate(Math.sin(frame / 6), [-1, 1], [0.45, 1]);
-  const labelIn = interpolate(frame, [55, 80], [0, 1], {
+  const pulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.45, 1]);
+  const labelIn = interpolate(frame, [28, 48], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -755,7 +771,7 @@ const AskScene: React.FC = () => {
   );
 };
 
-/** 50–56s: 金句落地（去尾部长停留；品牌收束挪到 outro） */
+/** 金句落地（去尾部长停留；品牌收束挪到 outro） */
 const CloseScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -869,7 +885,7 @@ const OUTRO_BEATS = [
   { label: "筛子的洞", sub: "成功外观" },
 ] as const;
 
-/** 56–60s: 冷电子收束 — 三点回扣 + 品牌 */
+/** 冷电子收束 — 三点回扣 + 品牌 */
 const OutroScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -998,60 +1014,49 @@ const OutroScene: React.FC = () => {
 };
 
 export const SurvivorshipBias: React.FC = () => {
-  const ghostDur = 12 * FPS;
-  const sieveDur = 6 * FPS;
-  const titleDur = 6 * FPS;
-  const transferDur = 8 * FPS;
-  const askDur = 8 * FPS;
-  // 金句段去尾部停留：10s → 6s；腾出 4s 给 outro
-  const closeDur = 6 * FPS;
-  const outroDur = 4 * FPS;
-  const closeFrom = 50 * FPS;
-  const outroFrom = closeFrom + closeDur;
-
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
       <FullBeatAudio />
-      <Sequence durationInFrames={10 * FPS} name="00-opening">
+      <Sequence durationInFrames={OPENING_DUR} name="00-opening">
         {/* 全片音轨由 FullBeatAudio 统一播，避免开头 SFX 叠两遍 */}
         <Opening10s withAudio={false} />
       </Sequence>
-      <Sequence from={10 * FPS} durationInFrames={ghostDur} name="05-ghost">
-        <FadeScene durationInFrames={ghostDur} fade={10}>
+      <Sequence from={GHOST_FROM} durationInFrames={GHOST_DUR} name="05-ghost">
+        <FadeScene durationInFrames={GHOST_DUR} fade={8}>
           <GhostRevealScene />
         </FadeScene>
       </Sequence>
-      <Sequence from={22 * FPS} durationInFrames={sieveDur} name="06-sieve">
-        <FadeScene durationInFrames={sieveDur} fade={10}>
+      <Sequence from={SIEVE_FROM} durationInFrames={SIEVE_DUR} name="06-sieve">
+        <FadeScene durationInFrames={SIEVE_DUR} fade={10}>
           <SieveScene />
         </FadeScene>
       </Sequence>
-      <Sequence from={28 * FPS} durationInFrames={titleDur} name="07-title">
-        <FadeScene durationInFrames={titleDur} fade={10}>
+      <Sequence from={TITLE_FROM} durationInFrames={TITLE_DUR} name="07-title">
+        <FadeScene durationInFrames={TITLE_DUR} fade={10}>
           <TitleScene />
         </FadeScene>
       </Sequence>
       <Sequence
-        from={34 * FPS}
-        durationInFrames={transferDur}
+        from={TRANSFER_FROM}
+        durationInFrames={TRANSFER_DUR}
         name="08-transfer"
       >
-        <FadeScene durationInFrames={transferDur} fade={10}>
+        <FadeScene durationInFrames={TRANSFER_DUR} fade={10}>
           <TransferScene />
         </FadeScene>
       </Sequence>
-      <Sequence from={42 * FPS} durationInFrames={askDur} name="09-ask">
-        <FadeScene durationInFrames={askDur} fade={10}>
+      <Sequence from={ASK_FROM} durationInFrames={ASK_DUR} name="09-ask">
+        <FadeScene durationInFrames={ASK_DUR} fade={10}>
           <AskScene />
         </FadeScene>
       </Sequence>
-      <Sequence from={closeFrom} durationInFrames={closeDur} name="10-close">
-        <FadeScene durationInFrames={closeDur} fade={8}>
+      <Sequence from={CLOSE_FROM} durationInFrames={CLOSE_DUR} name="10-close">
+        <FadeScene durationInFrames={CLOSE_DUR} fade={8}>
           <CloseScene />
         </FadeScene>
       </Sequence>
-      <Sequence from={outroFrom} durationInFrames={outroDur} name="11-outro">
-        <FadeScene durationInFrames={outroDur} fade={8}>
+      <Sequence from={OUTRO_FROM} durationInFrames={OUTRO_DUR} name="11-outro">
+        <FadeScene durationInFrames={OUTRO_DUR} fade={8}>
           <OutroScene />
         </FadeScene>
       </Sequence>
