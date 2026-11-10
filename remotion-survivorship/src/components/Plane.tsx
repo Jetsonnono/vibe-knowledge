@@ -43,6 +43,7 @@ export type HighlightMode = "none" | "holes" | "engines" | "all";
 export const PlaneSilhouette: React.FC<{
   showHoles?: boolean;
   holeProgress?: number;
+  holeOpacity?: number;
   highlightMissing?: boolean;
   highlightMode?: HighlightMode;
   ghost?: boolean;
@@ -50,6 +51,7 @@ export const PlaneSilhouette: React.FC<{
 }> = ({
   showHoles = true,
   holeProgress = 1,
+  holeOpacity = 0.95,
   highlightMissing = false,
   highlightMode = "none",
   ghost = false,
@@ -154,7 +156,7 @@ export const PlaneSilhouette: React.FC<{
               cy={h.cy}
               r={h.r}
               fill={COLORS.surprise}
-              opacity={0.95}
+              opacity={holeOpacity}
             />
           ))}
       </svg>

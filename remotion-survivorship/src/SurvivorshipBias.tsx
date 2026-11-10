@@ -16,76 +16,100 @@ import { COLORS, FPS } from "./theme";
 
 /**
  * 全片 60s · 前 10s 复用已锁定 Opening10s
- * 10–22 幽灵飞机反转
- * 22–28 筛子隐喻
+ * 10–22 幽灵飞机反转（单机叠层 + 红圈）
+ * 22–28 筛子隐喻（下落穿网）
  * 28–34 片名
- * 34–42 当代迁移
+ * 34–42 当代迁移（样本流）
  * 42–50 谁缺席
  * 50–60 金句收束
  */
 
-/** 10–22s: 返航半透明 + 幽灵飞机要害闪红 */
+const VITAL_RINGS = [
+  { cx: 355, cy: 195, rx: 52, ry: 44 },
+  { cx: 415, cy: 190, rx: 48, ry: 42 },
+  { cx: 585, cy: 190, rx: 48, ry: 42 },
+  { cx: 645, cy: 195, rx: 52, ry: 44 },
+  { cx: 500, cy: 95, rx: 46, ry: 52 },
+];
+
+/** 10–22s: 同一架机叠幽灵层 + 要害红圈脉冲 */
 const GhostRevealScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const ghostIn = interpolate(frame, [18, 55], [0, 1], {
+  const survivorDim = interpolate(frame, [18, 50], [1, 0.48], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const survivorDim = interpolate(frame, [0, 40], [1, 0.42], {
+  const ghostIn = interpolate(frame, [28, 70], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const labelIn = interpolate(frame, [70, 95], [0, 1], {
+  const rings = interpolate(frame, [55, 85], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const pulse = interpolate(Math.sin(frame / 6), [-1, 1], [0.45, 1]);
+  const labelIn = interpolate(frame, [80, 105], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   return (
     <Shell>
-      <CenterStage y={-28}>
-        <div
-          style={{
-            position: "relative",
-            width: 1180,
-            height: 640,
-          }}
-        >
-          {/* 返航机：略左下 */}
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 48,
-              opacity: survivorDim,
-              transform: "scale(0.88)",
-              transformOrigin: "left top",
-            }}
-          >
+      <CenterStage y={-36}>
+        <div style={{ position: "relative", width: 980, height: 597 }}>
+          <div style={{ opacity: survivorDim }}>
             <PlaneSilhouette showHoles holeProgress={1} />
           </div>
-          {/* 幽灵机：右上叠入，要害闪红 */}
+          {/* 幽灵虚线层：同机位淡入 */}
           <div
             style={{
               position: "absolute",
-              right: 0,
-              top: 0,
-              opacity: ghostIn * 0.95,
-              transform: `translate(${(1 - ghostIn) * 40}px, ${(1 - ghostIn) * -24}px) scale(0.88)`,
-              transformOrigin: "right top",
-              filter: `blur(${(1 - ghostIn) * 3}px)`,
+              inset: 0,
+              opacity: ghostIn * 0.55,
+              filter: "contrast(0.85) brightness(1.15)",
+              mixBlendMode: "screen",
             }}
           >
-            <PlaneSilhouette
-              showHoles={false}
-              highlightMode="engines"
-              ghost
-            />
+            <PlaneSilhouette showHoles={false} ghost scale={1} />
           </div>
+          <svg
+            width={980}
+            height={597}
+            viewBox="0 0 1000 562"
+            style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+          >
+            {VITAL_RINGS.map((r, i) => (
+              <ellipse
+                key={i}
+                cx={r.cx}
+                cy={r.cy}
+                rx={r.rx}
+                ry={r.ry}
+                fill="none"
+                stroke={COLORS.danger}
+                strokeWidth={2.2}
+                strokeOpacity={rings * pulse}
+                style={{
+                  filter: `drop-shadow(0 0 ${10 * pulse}px ${COLORS.danger})`,
+                }}
+              />
+            ))}
+            {/* 短指引 */}
+            <line
+              x1="720"
+              y1="70"
+              x2="560"
+              y2="100"
+              stroke={COLORS.danger}
+              strokeWidth="1.2"
+              strokeOpacity={rings * labelIn * 0.85}
+            />
+          </svg>
           <div
             style={{
               position: "absolute",
-              left: 24,
-              top: 12,
+              left: 28,
+              top: 18,
               fontFamily: sans.fontFamily,
               fontSize: 20,
               letterSpacing: "0.16em",
@@ -98,16 +122,17 @@ const GhostRevealScene: React.FC = () => {
           <div
             style={{
               position: "absolute",
-              right: 24,
-              top: 12,
+              right: 36,
+              top: 36,
               fontFamily: sans.fontFamily,
-              fontSize: 20,
-              letterSpacing: "0.16em",
+              fontSize: 22,
+              letterSpacing: "0.12em",
               color: COLORS.danger,
-              opacity: ghostIn * labelIn,
+              opacity: rings * labelIn,
+              textShadow: `0 0 18px ${COLORS.danger}`,
             }}
           >
-            没回来的 · 要害命中
+            没回来的
           </div>
         </div>
       </CenterStage>
@@ -121,89 +146,122 @@ const GhostRevealScene: React.FC = () => {
   );
 };
 
-/** 22–28s: 筛子——多数坠落，少数留下 */
+/** 22–28s: 筛子——落下、穿网、金留灰坠 */
 const SieveScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const dots = Array.from({ length: 40 }, (_, i) => i);
-  const lineIn = interpolate(frame, [0, 16], [0, 1], {
+  const meshIn = interpolate(frame, [0, 14], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const dots = Array.from({ length: 36 }, (_, i) => i);
+  const goldLabel = interpolate(frame, [55, 72], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const greyLabel = interpolate(frame, [78, 95], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   return (
     <Shell>
-      <CenterStage y={-56}>
-        <svg width={980} height={460} viewBox="0 0 980 460">
-          <line
-            x1="90"
-            y1="168"
-            x2={90 + 800 * lineIn}
-            y2="168"
-            stroke={COLORS.structure}
-            strokeWidth="1.5"
-            strokeDasharray="5 9"
-            opacity={0.45}
-          />
+      <CenterStage y={-50}>
+        <svg width={1000} height={500} viewBox="0 0 1000 500">
           <text
-            x="490"
-            y="36"
+            x="500"
+            y="34"
             textAnchor="middle"
             fill={COLORS.muted}
             fontFamily={sans.fontFamily}
             fontSize="22"
-            letterSpacing="0.2em"
-            opacity={lineIn}
+            letterSpacing="0.22em"
+            opacity={meshIn}
           >
             筛选
           </text>
+          {/* 滤网：横线 + 孔距刻度 */}
+          <g opacity={meshIn}>
+            <line
+              x1="80"
+              y1="210"
+              x2="920"
+              y2="210"
+              stroke={COLORS.structure}
+              strokeWidth="2"
+              strokeOpacity="0.55"
+            />
+            {Array.from({ length: 21 }).map((_, i) => {
+              const x = 100 + i * 40;
+              return (
+                <line
+                  key={i}
+                  x1={x}
+                  y1={200}
+                  x2={x}
+                  y2={220}
+                  stroke={COLORS.structure}
+                  strokeWidth="1.4"
+                  strokeOpacity={0.35}
+                />
+              );
+            })}
+          </g>
           {dots.map((i) => {
-            const col = i % 10;
-            const row = Math.floor(i / 10);
-            const x = 140 + col * 78;
-            const startY = 58 + row * 26;
-            const survives = i % 5 === 0;
-            const fall = interpolate(frame, [12 + i * 0.7, 48 + i * 0.7], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-            const y = survives
-              ? startY + 118
-              : startY + 118 + fall * (170 + (i % 6) * 10);
-            const opacity = survives ? 1 : Math.max(0.08, 1 - fall * 0.92);
+            const col = i % 12;
+            const row = Math.floor(i / 12);
+            const x = 110 + col * 68;
+            const startY = 48 + row * 22;
+            const survives = i % 4 === 0;
+            const drop = interpolate(
+              frame,
+              [8 + i * 1.1, 55 + i * 0.9],
+              [0, 1],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+            );
+            // 落到筛线再决定
+            const toMesh = Math.min(1, drop / 0.55);
+            const after = Math.max(0, (drop - 0.55) / 0.45);
+            const meshY = 210;
+            let y: number;
+            let opacity = 1;
+            if (toMesh < 1) {
+              y = startY + (meshY - 14 - startY) * toMesh;
+            } else if (survives) {
+              y = meshY - 14;
+              opacity = 1;
+            } else {
+              y = meshY - 14 + after * (160 + (i % 5) * 12);
+              opacity = Math.max(0.05, 1 - after * 0.95);
+            }
+            const lit = survives && toMesh >= 1;
             return (
               <circle
                 key={i}
                 cx={x}
                 cy={y}
-                r={survives ? 8 : 5.5}
-                fill={survives ? COLORS.surprise : COLORS.ghost}
+                r={lit ? 8 : 5.5}
+                fill={lit ? COLORS.surprise : COLORS.ghost}
                 opacity={opacity}
               />
             );
           })}
           <text
-            x="250"
-            y="430"
+            x="220"
+            y="455"
             fill={COLORS.surprise}
             fontFamily={sans.fontFamily}
             fontSize="22"
-            opacity={interpolate(frame, [50, 70], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            })}
+            opacity={goldLabel}
           >
             看得见的成功
           </text>
           <text
-            x="620"
-            y="430"
+            x="640"
+            y="455"
             fill={COLORS.muted}
             fontFamily={sans.fontFamily}
             fontSize="22"
-            opacity={interpolate(frame, [58, 78], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            })}
+            opacity={greyLabel}
           >
             沉默的失败
           </text>
@@ -281,92 +339,234 @@ const TitleScene: React.FC = () => {
   );
 };
 
-/** 34–42s: 三例迁移（细线面板，非厚卡片） */
+/**
+ * 34–42s: 样本流迁移（非三栏 PPT）
+ * 顶栏三题指示 → 样本从上方落入筛线 → 金条留下、灰条穿网坠落 → 左侧沉淀
+ */
 const TransferScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const panels = [
-    { title: "成功学书单", note: "只收录成功者" },
-    { title: "爆款复盘", note: "失败从不进样本" },
-    { title: "上岸经验", note: "缺席者无声" },
+  const topics = [
+    {
+      title: "成功学书单",
+      keep: "成功者",
+      fail: ["失败经验", "半途而废", "没出版的", "沉默样本"],
+    },
+    {
+      title: "爆款复盘",
+      keep: "爆款",
+      fail: ["扑街稿", "沉默号", "删掉的数据", "未播内容"],
+    },
+    {
+      title: "上岸经验",
+      keep: "上岸者",
+      fail: ["未录取", "弃考", "转行沉默", "中途离场"],
+    },
+  ];
+
+  const segment = 80;
+  const active = Math.min(2, Math.floor(frame / segment));
+  const local = frame - active * segment;
+  const topic = topics[active];
+
+  const titleIn = interpolate(local, [0, 12], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const approach = interpolate(local, [6, 32], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const sift = interpolate(local, [28, 62], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const keepPulse = interpolate(Math.sin((frame + active * 11) / 7), [-1, 1], [
+    0.72,
+    1,
+  ]);
+  const keptCount = topics.slice(0, active + (sift > 0.5 ? 1 : 0)).length;
+
+  // 所有样本先成排落入：1 金 + 4 灰
+  const chips = [
+    { label: topic.keep, survive: true },
+    ...topic.fail.map((label) => ({ label, survive: false })),
   ];
 
   return (
     <Shell>
-      <CenterStage y={-48}>
-        <div style={{ display: "flex", gap: 36 }}>
-          {panels.map((p, i) => {
-            const appear = interpolate(frame, [6 + i * 14, 24 + i * 14], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-            const failIn = interpolate(frame, [40 + i * 10, 58 + i * 10], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-            return (
-              <div
-                key={p.title}
-                style={{
-                  width: 280,
-                  height: 340,
-                  border: `1px solid ${COLORS.line}`,
-                  background: "transparent",
-                  opacity: appear,
-                  transform: `translateY(${(1 - appear) * 28}px)`,
-                  position: "relative",
-                  padding: "32px 28px",
-                  boxSizing: "border-box",
-                }}
-              >
+      <CenterStage y={-36}>
+        <div style={{ width: 1560, height: 540, position: "relative" }}>
+          {/* 三题进度指示 */}
+          <div
+            style={{
+              position: "absolute",
+              top: 18,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "center",
+              gap: 18,
+            }}
+          >
+            {topics.map((t, i) => {
+              const on = i === active;
+              const done = i < active;
+              return (
                 <div
+                  key={t.title}
                   style={{
+                    padding: "10px 18px",
+                    borderBottom: `2px solid ${
+                      on || done ? COLORS.surprise : COLORS.line
+                    }`,
                     fontFamily: sans.fontFamily,
-                    fontSize: 30,
-                    color: COLORS.surprise,
-                    fontWeight: 600,
+                    fontSize: 22,
+                    color: on ? COLORS.surprise : done ? COLORS.text : COLORS.muted,
+                    opacity: on ? 1 : done ? 0.7 : 0.4,
                     letterSpacing: "0.04em",
                   }}
                 >
-                  {p.title}
+                  {t.title}
                 </div>
-                <div
-                  style={{
-                    marginTop: 16,
-                    width: 48,
-                    height: 1,
-                    background: COLORS.structure,
-                    opacity: 0.55,
-                  }}
-                />
-                <div
-                  style={{
-                    marginTop: 20,
-                    fontFamily: sans.fontFamily,
-                    fontSize: 22,
-                    color: COLORS.muted,
-                    lineHeight: 1.55,
-                  }}
-                >
-                  {p.note}
-                </div>
-                {[0, 1, 2].map((n) => (
-                  <div
-                    key={n}
-                    style={{
-                      position: "absolute",
-                      right: 18 + n * 10,
-                      bottom: 28 + n * 12,
-                      width: 78,
-                      height: 48,
-                      border: `1px dashed ${COLORS.ghost}`,
-                      opacity: 0.25 + failIn * 0.35,
-                      transform: `rotate(${-10 + n * 4}deg)`,
-                    }}
-                  />
-                ))}
+              );
+            })}
+          </div>
+
+          {/* 筛线 */}
+          <div
+            style={{
+              position: "absolute",
+              left: 100,
+              right: 100,
+              top: 268,
+              height: 2,
+              background: `linear-gradient(90deg, transparent, ${COLORS.structure} 10%, ${COLORS.structure} 90%, transparent)`,
+              opacity: 0.5,
+            }}
+          />
+          {Array.from({ length: 22 }).map((_, i) => (
+            <div
+              key={`tick-${i}`}
+              style={{
+                position: "absolute",
+                left: 140 + i * 58,
+                top: 258,
+                width: 1,
+                height: 22,
+                background: COLORS.structure,
+                opacity: 0.3,
+              }}
+            />
+          ))}
+
+          {/* 样本芯片流 */}
+          {chips.map((chip, i) => {
+            const slot = i - (chips.length - 1) / 2;
+            const x = 780 + slot * 195;
+            const enterY = interpolate(approach, [0, 1], [-80, 0]);
+            const fall = chip.survive
+              ? 0
+              : interpolate(sift, [0.1 + i * 0.06, 0.55 + i * 0.08], [0, 1], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                });
+            const y = 220 + enterY + fall * (150 + (i % 3) * 18);
+            const opacity = chip.survive
+              ? 0.4 + approach * 0.6
+              : Math.max(0.05, approach * (0.85 - fall * 0.8));
+            const scale = chip.survive
+              ? 0.94 + 0.08 * keepPulse * (sift > 0.25 ? 1 : 0.4)
+              : 1 - fall * 0.08;
+
+            return (
+              <div
+                key={`${topic.title}-${chip.label}`}
+                style={{
+                  position: "absolute",
+                  left: x,
+                  top: y,
+                  transform: `translateX(-50%) scale(${scale}) rotate(${
+                    chip.survive ? 0 : fall * (slot * 6)
+                  }deg)`,
+                  padding: chip.survive ? "16px 28px" : "12px 18px",
+                  border: chip.survive
+                    ? `1.5px solid ${COLORS.surprise}`
+                    : `1px dashed rgba(242,244,247,0.28)`,
+                  background: chip.survive
+                    ? "rgba(232,184,109,0.1)"
+                    : "transparent",
+                  color: chip.survive ? COLORS.surprise : COLORS.muted,
+                  fontFamily: sans.fontFamily,
+                  fontSize: chip.survive ? 28 : 20,
+                  letterSpacing: "0.06em",
+                  opacity: titleIn * opacity,
+                  filter: chip.survive ? undefined : `blur(${fall * 2.2}px)`,
+                  boxShadow:
+                    chip.survive && sift > 0.3
+                      ? `0 0 ${22 * keepPulse}px rgba(232,184,109,0.28)`
+                      : "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {chip.label}
               </div>
             );
           })}
+
+          {/* 左侧沉淀 */}
+          <div
+            style={{
+              position: "absolute",
+              left: 40,
+              bottom: 28,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: sans.fontFamily,
+                fontSize: 16,
+                color: COLORS.muted,
+                letterSpacing: "0.16em",
+                opacity: keptCount ? 0.85 : 0,
+              }}
+            >
+              你只看见
+            </div>
+            {topics.slice(0, keptCount).map((t, i) => (
+              <div
+                key={t.title}
+                style={{
+                  fontFamily: sans.fontFamily,
+                  fontSize: 20,
+                  color: COLORS.surprise,
+                  opacity: 0.55 + i * 0.15,
+                }}
+              >
+                · {t.title}
+              </div>
+            ))}
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              right: 56,
+              bottom: 36,
+              fontFamily: sans.fontFamily,
+              fontSize: 18,
+              color: COLORS.muted,
+              letterSpacing: "0.14em",
+              opacity: interpolate(frame, [36, 60], [0, 0.9], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              }),
+            }}
+          >
+            缺席者落下
+          </div>
         </div>
       </CenterStage>
       <EffectSubtitle
@@ -377,22 +577,26 @@ const TransferScene: React.FC = () => {
   );
 };
 
-/** 42–50s: 谁没出现在样本里 */
+/** 42–50s: 十字扫描空框 + ？落下 */
 const AskScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const cursorX = interpolate(frame, [8, 110], [280, 1280], {
+  const cluster = interpolate(frame, [0, 18], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const q = interpolate(frame, [70, 100], [0, 1], {
+  const box = interpolate(frame, [24, 48], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const cluster = interpolate(frame, [0, 20], [0, 1], {
+  const scanX = interpolate(frame, [10, 120], [260, 1320], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const box = interpolate(frame, [30, 55], [0, 1], {
+  const q = interpolate(frame, [100, 130], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const qDrop = interpolate(frame, [100, 130], [-40, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -408,7 +612,7 @@ const AskScene: React.FC = () => {
               cy={150 + Math.floor(i / 8) * 58}
               r={12}
               fill={COLORS.surprise}
-              opacity={0.2 + cluster * 0.7}
+              opacity={0.25 + cluster * 0.65}
             />
           ))}
           <text
@@ -431,7 +635,7 @@ const AskScene: React.FC = () => {
             fill="none"
             stroke={COLORS.danger}
             strokeDasharray="7 11"
-            strokeOpacity={0.75 * box}
+            strokeOpacity={0.8 * box}
           />
           <text
             x="1120"
@@ -445,29 +649,36 @@ const AskScene: React.FC = () => {
           >
             缺席的样本
           </text>
-          <circle
-            cx={cursorX}
-            cy={180}
-            r={8}
-            fill={COLORS.structure}
-            opacity={0.9}
-          />
-          <circle
-            cx={cursorX}
-            cy={180}
-            r={18}
-            fill="none"
-            stroke={COLORS.structure}
-            strokeOpacity={0.35}
-          />
+          {/* 扫描十字，不是数据点 */}
+          <g opacity={0.85}>
+            <line
+              x1={scanX - 22}
+              y1={180}
+              x2={scanX + 22}
+              y2={180}
+              stroke={COLORS.structure}
+              strokeWidth="1.4"
+            />
+            <line
+              x1={scanX}
+              y1={158}
+              x2={scanX}
+              y2={202}
+              stroke={COLORS.structure}
+              strokeWidth="1.4"
+            />
+          </g>
           <text
             x={1120}
-            y={195}
+            y={195 + qDrop}
             textAnchor="middle"
             fill={COLORS.danger}
             fontFamily={serif.fontFamily}
-            fontSize="72"
+            fontSize="78"
             opacity={q}
+            style={{
+              filter: `drop-shadow(0 0 ${16 * q}px ${COLORS.danger})`,
+            }}
           >
             ?
           </text>
@@ -482,16 +693,25 @@ const AskScene: React.FC = () => {
   );
 };
 
-/** 50–60s: 金句闭环 */
+/** 50–60s: 金句闭环 —— 弹孔降透，要害金圈 */
 const CloseScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const enter = spring({ frame, fps, config: { damping: 18, stiffness: 110 } });
-  const glow = interpolate(frame, [16, 90], [0.15, 1], {
+  const glow = interpolate(frame, [16, 90], [0.2, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const brand = interpolate(frame, [70, 100], [0, 1], {
+  const holeFade = interpolate(frame, [0, 40], [0.95, 0.38], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const vital = interpolate(frame, [24, 60], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const pulse = interpolate(Math.sin(frame / 8), [-1, 1], [0.55, 1]);
+  const brand = interpolate(frame, [90, 120], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -499,18 +719,41 @@ const CloseScene: React.FC = () => {
   return (
     <Shell>
       <CenterStage y={-78}>
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", width: 980, height: 597 }}>
           <PlaneSilhouette
             showHoles
             holeProgress={1}
-            highlightMode="engines"
+            holeOpacity={holeFade}
           />
+          <svg
+            width={980}
+            height={597}
+            viewBox="0 0 1000 562"
+            style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+          >
+            {VITAL_RINGS.map((r, i) => (
+              <ellipse
+                key={i}
+                cx={r.cx}
+                cy={r.cy}
+                rx={r.rx}
+                ry={r.ry}
+                fill={`rgba(232,184,109,${0.06 * vital * pulse})`}
+                stroke={COLORS.surprise}
+                strokeWidth={2}
+                strokeOpacity={vital * pulse}
+                style={{
+                  filter: `drop-shadow(0 0 ${12 * pulse * vital}px ${COLORS.surprise})`,
+                }}
+              />
+            ))}
+          </svg>
           <div
             style={{
               position: "absolute",
-              inset: -20,
+              inset: -24,
               borderRadius: "50%",
-              background: `radial-gradient(circle, rgba(232,184,109,${0.12 * glow}) 0%, transparent 62%)`,
+              background: `radial-gradient(circle, rgba(232,184,109,${0.1 * glow}) 0%, transparent 62%)`,
               pointerEvents: "none",
             }}
           />
@@ -568,31 +811,24 @@ const CloseScene: React.FC = () => {
 export const SurvivorshipBias: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
-      {/* 0–10s 已锁定开头 */}
       <Sequence durationInFrames={10 * FPS} name="00-opening">
         <Opening10s />
       </Sequence>
-      {/* 10–22s 幽灵反转 */}
       <Sequence from={10 * FPS} durationInFrames={12 * FPS} name="05-ghost">
         <GhostRevealScene />
       </Sequence>
-      {/* 22–28s 筛子 */}
       <Sequence from={22 * FPS} durationInFrames={6 * FPS} name="06-sieve">
         <SieveScene />
       </Sequence>
-      {/* 28–34s 片名 */}
       <Sequence from={28 * FPS} durationInFrames={6 * FPS} name="07-title">
         <TitleScene />
       </Sequence>
-      {/* 34–42s 迁移 */}
       <Sequence from={34 * FPS} durationInFrames={8 * FPS} name="08-transfer">
         <TransferScene />
       </Sequence>
-      {/* 42–50s 谁缺席 */}
       <Sequence from={42 * FPS} durationInFrames={8 * FPS} name="09-ask">
         <AskScene />
       </Sequence>
-      {/* 50–60s 金句 */}
       <Sequence from={50 * FPS} durationInFrames={10 * FPS} name="10-close">
         <CloseScene />
       </Sequence>
