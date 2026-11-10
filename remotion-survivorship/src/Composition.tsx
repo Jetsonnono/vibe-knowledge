@@ -22,7 +22,6 @@ export const MyComposition: React.FC = () => {
         height={HEIGHT}
         calculateMetadata={waitFonts}
       />
-      {/* 全片骨架先挂着，本步不审、不渲染 */}
       <Composition
         id="SurvivorshipBias"
         component={SurvivorshipBias}
