@@ -17,11 +17,11 @@ const FullBgm: React.FC<{ durationInFrames: number }> = ({
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  // 分段节奏 BGM：整体仍低于卡点 SFX
+  // 冷电子成曲 BGM：可听清，但仍低于卡点 SFX
   let volume = interpolate(
     frame,
     [0, 12, durationInFrames - 35, durationInFrames],
-    [0, 0.24, 0.24, 0],
+    [0, 0.34, 0.34, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   // 提问 ding
@@ -73,7 +73,7 @@ const FullBgm: React.FC<{ durationInFrames: number }> = ({
 /** 开头 10s 相对时间轴卡点（Opening10s 独立预览也可用） */
 export const OpeningBeatAudio: React.FC = () => {
   const frame = useCurrentFrame();
-  const bgmVol = interpolate(frame, [0, 15, 280, 300], [0, 0.24, 0.24, 0.12], {
+  const bgmVol = interpolate(frame, [0, 15, 280, 300], [0, 0.32, 0.32, 0.16], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
