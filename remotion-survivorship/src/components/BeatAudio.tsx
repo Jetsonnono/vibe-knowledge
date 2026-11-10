@@ -17,46 +17,44 @@ const FullBgm: React.FC<{ durationInFrames: number }> = ({
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  // 冷电子成曲 BGM：可听清，但仍低于卡点 SFX
+  // 冷电子成曲 BGM；duck 仅约 –2～–4dB，避开短留白窗
   let volume = interpolate(
     frame,
     [0, 12, durationInFrames - 35, durationInFrames],
     [0, 0.34, 0.34, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // 提问 ding
+  // ~–3dB ≈ 0.70；留白窗内不叠加 duck（impact 前 7.6–8.0s / resolve 前 50.25–50.75s）
   const duckDing = interpolate(
     frame,
-    [52, 60, 78, 95],
-    [1, 0.5, 0.55, 1],
+    [55, 60, 72, 88],
+    [1, 0.72, 0.75, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // 「错了。」impact
+  // impact：从命中后开始轻 duck，避开 7.6–8.0 轻收窗
   const duckWrong = interpolate(
     frame,
-    [230, 240, 255, 280],
-    [1, 0.38, 0.42, 1],
+    [242, 248, 265, 285],
+    [1, 0.7, 0.74, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // 片名 chime
   const duckTitle = interpolate(
     frame,
-    [28 * FPS, 28 * FPS + 12, 28 * FPS + 55, 28 * FPS + 90],
-    [1, 0.48, 0.52, 1],
+    [28 * FPS + 6, 28 * FPS + 14, 28 * FPS + 45, 28 * FPS + 70],
+    [1, 0.72, 0.76, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // 缺席 ?
   const duckAsk = interpolate(
     frame,
-    [42 * FPS + 100, 42 * FPS + 110, 42 * FPS + 140, 42 * FPS + 165],
-    [1, 0.5, 0.55, 1],
+    [42 * FPS + 108, 42 * FPS + 115, 42 * FPS + 135, 42 * FPS + 155],
+    [1, 0.72, 0.76, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // 金句 resolve
+  // resolve：命中后轻 duck，避开 50.25–50.75 轻收窗（~1507–1522f）
   const duckClose = interpolate(
     frame,
-    [50 * FPS + 10, 50 * FPS + 24, 50 * FPS + 70, 50 * FPS + 110],
-    [1, 0.42, 0.5, 1],
+    [50 * FPS + 26, 50 * FPS + 34, 50 * FPS + 70, 50 * FPS + 100],
+    [1, 0.7, 0.75, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   volume *= duckDing * duckWrong * duckTitle * duckAsk * duckClose;

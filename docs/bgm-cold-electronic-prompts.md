@@ -1,34 +1,41 @@
-# 《幸存者偏差》60s · 冷电子 BGM 生成提示词
+# 《幸存者偏差》60s · 冷电子 BGM 生成提示词（连续性修订）
 
-> 用途：按成片卡点分段生成 / 拼轨。气质：**cold electronic**（冷电子纪录片 / 科技解谜）。  
-> 总长：60s · 120–124 BPM 可 · 无歌词 · 低中频为主，不抢字幕。
+> 气质：**cold electronic** · 总长 60s · 无歌词  
+> **结构规则（必须）**：相邻段 **重叠 0.8–1.5s crossfade**；arp/pad/bass **不得**在段缝整段停掉；大卡点前最多 **0.3–0.6s 轻收**，禁止 ~2s+ 死静音。
 
-## Master prompt（整曲）
+## Master prompt
 
 ```
 Cold electronic documentary underscore, 60 seconds, instrumental only,
-dark cyan atmosphere, sparse and precise, sidechained soft pads,
-deep sub bass, glassy arpeggio, minimal techno pulse that stays under voice,
-no vocals, no drops that slam, cinematic knowledge-video energy,
-mix leaves headroom for SFX hits at cue points.
+continuous overlapping sections with 1s crossfades, dark cyan atmosphere,
+sidechained soft pads (shallow), deep sub bass always present,
+glassy arpeggio that never fully stops, minimal techno pulse under dialogue,
+no vocals, no hard silent gaps, leave slight headroom for SFX.
 ```
 
-## 分段提示词（对齐成片）
+## 分段提示词（交叠时间）
 
-| 时段 | 画面卡点 | Prompt |
+| 时段（含重叠） | 画面卡点 | Prompt |
 | --- | --- | --- |
-| 0:00–0:08 | 弹孔 tick → 提问 ding | `Cold intro: filtered noise wash, soft ticking pulse synced to sparse hits, glassy high arpeggio enters gently, tension without aggression, 0–8s` |
-| 0:08–0:10 | 「错了」impact 前留白→impact | `Near-silence then a controlled low impact boom and bass duck, freeze the groove for 0.7s before the hit, cold electronic, 8–10s` |
-| 0:10–0:22 | 幽灵反转 | `Airy cold pad, distant sub bass, slow evolving chord (Am–F–C–G color), sparse pulse, mysterious reveal mood, 10–22s` |
-| 0:22–0:28 | 筛子 | `Light IDM ticks, descending synth motif suggesting filtering, keep groove thin, 22–28s` |
-| 0:28–0:34 | 片名 chime | `Lift: brighter cold chords, short melodic hook on glassy synth, still restrained, title-card energy, 28–34s` |
-| 0:34–0:42 | 三例迁移 | `Syncopated soft kick + muted pluck ostinato, modern cold tech, slight forward motion, 34–42s` |
-| 0:42–0:50 | 缺席？ | `Sparse again, questioning interval motif, space and delay, 42–50s` |
-| 0:50–1:00 | 金句 resolve | `Rest 0.8s then warm-cold resolution: Am tonic melody, long pad tail, emotional but not cinematic trailer, fade out, 50–60s` |
+| 0:00–0:09 | 弹孔→提问 | `Cold intro pad+bass+arp, continuous, glassy arp enters ~2s, tension, crossfade into next by 8.5–9.5s` |
+| 0:07.6–0:08.4 | 「错了」前轻收 | `ONLY 0.3–0.5s light decay of mids, keep sub pad; never dead silence; then continue` |
+| 0:09.0–0:23 | 幽灵（9.0 起淡入） | `Airy cold pad fading in from 9.0 overlapping impact tail; Am–F–C–G; sparse pulse; arp continues` |
+| 0:21.4–0:29 | 筛子 | `Descending arp motif, thin groove, 0.8–1.2s overlap with previous/next chord blocks` |
+| 0:27.4–0:35 | 片名 | `Brighter cold chords + melodic hook; crossfade from sieve; arp keeps running` |
+| 0:33.6–0:43 | 迁移 | `Soft syncopation, muted plucks with release tails, shallow sidechain only, no 50ms cliffs` |
+| 0:41.6–0:51.2 | 缺席？ | `Sparser intervals but continuous LF pad; questioning motif; carry through to resolve` |
+| 0:50.25–0:50.75 | 金句前 | `0.4–0.6s light dip on mids/highs ONLY; keep low-frequency pad; then 0.5s fade-in` |
+| 0:50.3–1:00 | 金句 resolve | `Am tonic melody, long pad tail, fade out by 60s` |
 
 ## Negative prompt
 
 ```
-no vocals, no EDM festival drop, no trap hi-hats wall, no cheerful pop,
-no lo-fi vinyl crackle comedy vibe, no orchestral trailer brass
+no hard silent gaps longer than 0.6s, no hard cuts between sections,
+no vocals, no festival EDM drops, no trap hat walls, no cheerful pop
 ```
+
+## 实现备注
+
+- 成片文件：`remotion-survivorship/public/sfx/bgm-survivorship.mp3`
+- 生成脚本：`remotion-survivorship/scripts/gen_bgm_cold_electronic.py`
+- `BeatAudio.tsx`：整曲单轨播放；duck 仅约 –2～–4dB，且避开短留白窗
