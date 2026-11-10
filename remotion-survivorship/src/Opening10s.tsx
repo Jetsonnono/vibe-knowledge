@@ -7,6 +7,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { OpeningBeatAudio } from "./components/BeatAudio";
 import { EffectSubtitle } from "./components/EffectSubtitle";
 import { HighlightMode, PlaneSilhouette } from "./components/Plane";
 import { Shell } from "./components/Shell";
@@ -294,9 +295,12 @@ const BeatWrong: React.FC = () => {
   );
 };
 
-export const Opening10s: React.FC = () => {
+export const Opening10s: React.FC<{ withAudio?: boolean }> = ({
+  withAudio = true,
+}) => {
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
+      {withAudio ? <OpeningBeatAudio /> : null}
       <Sequence durationInFrames={60} name="holes">
         <BeatHoles />
       </Sequence>

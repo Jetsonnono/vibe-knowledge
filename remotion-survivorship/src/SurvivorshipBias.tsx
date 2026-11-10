@@ -7,6 +7,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { FullBeatAudio } from "./components/BeatAudio";
 import { EffectSubtitle } from "./components/EffectSubtitle";
 import { PlaneSilhouette } from "./components/Plane";
 import { CenterStage, FadeScene, Shell } from "./components/Shell";
@@ -897,8 +898,10 @@ export const SurvivorshipBias: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
+      <FullBeatAudio />
       <Sequence durationInFrames={10 * FPS} name="00-opening">
-        <Opening10s />
+        {/* 全片音轨由 FullBeatAudio 统一播，避免开头 SFX 叠两遍 */}
+        <Opening10s withAudio={false} />
       </Sequence>
       <Sequence from={10 * FPS} durationInFrames={ghostDur} name="05-ghost">
         <FadeScene durationInFrames={ghostDur} fade={10}>
