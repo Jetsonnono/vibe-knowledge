@@ -12,40 +12,54 @@ import { FPS } from "../theme";
 const sfx = (name: string) => staticFile(`sfx/${name}.wav`);
 const bgmSrc = staticFile("sfx/bgm-survivorship.mp3");
 
-/** 完整 BGM：60s 叙事弧，关键卡点处自动 duck */
+/** 节奏型 BGM：落点对齐卡点，关键 SFX 处自动 duck */
 const FullBgm: React.FC<{ durationInFrames: number }> = ({
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  // 基础床：略低于卡点
+  // 鼓点底轨略低于卡点 SFX
   let volume = interpolate(
     frame,
-    [0, 18, durationInFrames - 35, durationInFrames],
-    [0, 0.26, 0.26, 0],
+    [0, 12, durationInFrames - 35, durationInFrames],
+    [0, 0.22, 0.22, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // 「错了。」前后 duck
+  // 提问 ding
+  const duckDing = interpolate(
+    frame,
+    [52, 60, 78, 95],
+    [1, 0.5, 0.55, 1],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+  // 「错了。」impact
   const duckWrong = interpolate(
     frame,
     [230, 240, 255, 280],
-    [1, 0.45, 0.45, 1],
+    [1, 0.38, 0.42, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   // 片名 chime
   const duckTitle = interpolate(
     frame,
     [28 * FPS, 28 * FPS + 12, 28 * FPS + 55, 28 * FPS + 90],
-    [1, 0.55, 0.55, 1],
+    [1, 0.48, 0.52, 1],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+  // 缺席 ?
+  const duckAsk = interpolate(
+    frame,
+    [42 * FPS + 100, 42 * FPS + 110, 42 * FPS + 140, 42 * FPS + 165],
+    [1, 0.5, 0.55, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   // 金句 resolve
   const duckClose = interpolate(
     frame,
     [50 * FPS + 10, 50 * FPS + 24, 50 * FPS + 70, 50 * FPS + 110],
-    [1, 0.5, 0.55, 1],
+    [1, 0.42, 0.5, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  volume *= duckWrong * duckTitle * duckClose;
+  volume *= duckDing * duckWrong * duckTitle * duckAsk * duckClose;
 
   return (
     <Audio
