@@ -77,7 +77,7 @@ export const PlaneSilhouette: React.FC<{
   const allHot = mode === "all";
 
   const width = 980 * scale;
-  const height = 603 * scale; // matches cropped b17-top.png ~1.625 aspect
+  const height = 597 * scale; // matches transparent b17-top.png ~1.642 aspect
 
   return (
     <div

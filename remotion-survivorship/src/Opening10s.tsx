@@ -20,24 +20,96 @@ import { COLORS } from "./theme";
  * 8.0–10.0 「错了。」
  */
 
-const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <AbsoluteFill
-    style={{
-      backgroundColor: COLORS.bg,
-      backgroundImage:
-        "radial-gradient(ellipse at 50% 18%, rgba(126,182,255,0.09), transparent 58%)",
-    }}
-  >
+const RadarScope: React.FC = () => (
+  <AbsoluteFill style={{ pointerEvents: "none" }}>
+    {/* void + soft scope glow */}
     <AbsoluteFill
       style={{
-        opacity: 0.1,
-        backgroundImage:
-          "linear-gradient(rgba(126,182,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(126,182,255,0.4) 1px, transparent 1px)",
-        backgroundSize: "72px 72px",
-        maskImage:
-          "radial-gradient(ellipse at center, black 25%, transparent 72%)",
+        background:
+          "radial-gradient(circle at 50% 46%, rgba(126,182,255,0.10) 0%, rgba(11,13,16,0.55) 42%, #07090C 72%, #050607 100%)",
       }}
     />
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 1920 1080"
+      preserveAspectRatio="xMidYMid slice"
+      style={{ position: "absolute", inset: 0 }}
+    >
+      <defs>
+        <radialGradient id="radarFade" cx="50%" cy="46%" r="55%">
+          <stop offset="0%" stopColor="white" stopOpacity="1" />
+          <stop offset="58%" stopColor="white" stopOpacity="0.55" />
+          <stop offset="82%" stopColor="white" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="white" stopOpacity="0" />
+        </radialGradient>
+        <mask id="radarMask">
+          <rect width="1920" height="1080" fill="url(#radarFade)" />
+        </mask>
+      </defs>
+      <g mask="url(#radarMask)" fill="none" stroke={COLORS.structure}>
+        {/* range rings */}
+        {[120, 220, 340, 480, 640, 820].map((r, i) => (
+          <circle
+            key={r}
+            cx="960"
+            cy="500"
+            r={r}
+            strokeWidth={i === 3 ? 1.8 : 1.2}
+            strokeOpacity={0.28 - i * 0.025}
+          />
+        ))}
+        {/* crosshair */}
+        <line
+          x1="960"
+          y1="80"
+          x2="960"
+          y2="920"
+          strokeWidth="1.2"
+          strokeOpacity="0.2"
+        />
+        <line
+          x1="240"
+          y1="500"
+          x2="1680"
+          y2="500"
+          strokeWidth="1.2"
+          strokeOpacity="0.2"
+        />
+        {/* degree ticks on main ring */}
+        {Array.from({ length: 36 }).map((_, i) => {
+          const a = (i / 36) * Math.PI * 2;
+          const r0 = 470;
+          const r1 = i % 3 === 0 ? 500 : 488;
+          return (
+            <line
+              key={i}
+              x1={960 + Math.cos(a) * r0}
+              y1={500 + Math.sin(a) * r0}
+              x2={960 + Math.cos(a) * r1}
+              y2={500 + Math.sin(a) * r1}
+              strokeWidth={i % 3 === 0 ? 1.5 : 1}
+              strokeOpacity={i % 3 === 0 ? 0.28 : 0.14}
+            />
+          );
+        })}
+        {/* outer dashed tactical ring */}
+        <circle
+          cx="960"
+          cy="500"
+          r="700"
+          strokeWidth="1.1"
+          strokeOpacity="0.14"
+          strokeDasharray="6 14"
+        />
+      </g>
+    </svg>
+  </AbsoluteFill>
+);
+
+const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <AbsoluteFill style={{ backgroundColor: "#050607" }}>
+    <RadarScope />
     {children}
   </AbsoluteFill>
 );
