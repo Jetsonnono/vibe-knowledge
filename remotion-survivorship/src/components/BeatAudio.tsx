@@ -17,11 +17,11 @@ const FullBgm: React.FC<{ durationInFrames: number }> = ({
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  // 鼓点底轨略低于卡点 SFX
+  // 分段节奏 BGM：整体仍低于卡点 SFX
   let volume = interpolate(
     frame,
     [0, 12, durationInFrames - 35, durationInFrames],
-    [0, 0.22, 0.22, 0],
+    [0, 0.24, 0.24, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   // 提问 ding
