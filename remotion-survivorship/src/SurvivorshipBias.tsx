@@ -755,42 +755,33 @@ const AskScene: React.FC = () => {
   );
 };
 
-/** 50–60s: 弹孔更淡；要害先红后金 */
+/** 50–56s: 金句落地（去尾部长停留；品牌收束挪到 outro） */
 const CloseScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const enter = spring({ frame, fps, config: { damping: 18, stiffness: 110 } });
-  const glow = interpolate(frame, [16, 90], [0.2, 1], {
+  const glow = interpolate(frame, [10, 55], [0.2, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const holeFade = interpolate(frame, [0, 45], [0.9, 0.28], {
+  const holeFade = interpolate(frame, [0, 32], [0.9, 0.28], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const vital = interpolate(frame, [20, 55], [0, 1], {
+  const vital = interpolate(frame, [12, 40], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
   // 0→1：红 → 金
-  const toGold = interpolate(frame, [40, 75], [0, 1], {
+  const toGold = interpolate(frame, [28, 55], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
   const pulse = interpolate(Math.sin(frame / 8), [-1, 1], [0.55, 1]);
-  const brand = interpolate(frame, [90, 120], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
 
-  const stroke =
-    toGold < 0.5
-      ? COLORS.danger
-      : COLORS.surprise;
+  const stroke = toGold < 0.5 ? COLORS.danger : COLORS.surprise;
   const fillA =
-    toGold < 0.5
-      ? 0.05 * vital * pulse
-      : 0.07 * vital * pulse;
+    toGold < 0.5 ? 0.05 * vital * pulse : 0.07 * vital * pulse;
 
   return (
     <Shell sweep>
@@ -868,10 +859,128 @@ const CloseScene: React.FC = () => {
           }}
         />
       </div>
+    </Shell>
+  );
+};
+
+const OUTRO_BEATS = [
+  { label: "看见幸存者", sub: "返航样本" },
+  { label: "缺席样本", sub: "没回来的" },
+  { label: "筛子的洞", sub: "成功外观" },
+] as const;
+
+/** 56–60s: 冷电子收束 — 三点回扣 + 品牌 */
+const OutroScene: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const veil = interpolate(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const brand = interpolate(frame, [55, 85], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const line = interpolate(frame, [40, 70], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <Shell>
       <div
         style={{
           position: "absolute",
-          bottom: 78,
+          inset: 0,
+          background:
+            "radial-gradient(ellipse at 50% 40%, rgba(126,182,255,0.08) 0%, transparent 55%)",
+          opacity: veil,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: 160,
+          right: 160,
+          top: 280,
+          display: "flex",
+          justifyContent: "center",
+          gap: 48,
+        }}
+      >
+        {OUTRO_BEATS.map((b, i) => {
+          const local = frame - i * 10;
+          const enter = spring({
+            frame: Math.max(0, local),
+            fps,
+            config: { damping: 16, stiffness: 120 },
+          });
+          return (
+            <div
+              key={b.label}
+              style={{
+                flex: 1,
+                maxWidth: 320,
+                textAlign: "center",
+                opacity: enter * veil,
+                transform: `translateY(${(1 - enter) * 18}px)`,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: sans.fontFamily,
+                  fontSize: 15,
+                  letterSpacing: "0.28em",
+                  color: COLORS.muted,
+                  marginBottom: 10,
+                }}
+              >
+                {b.sub}
+              </div>
+              <div
+                style={{
+                  fontFamily: serif.fontFamily,
+                  fontSize: 34,
+                  fontWeight: 700,
+                  color: i === 2 ? COLORS.surprise : COLORS.text,
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {b.label}
+              </div>
+              <div
+                style={{
+                  margin: "14px auto 0",
+                  width: 36 * enter,
+                  height: 1.5,
+                  background: i === 2 ? COLORS.surprise : COLORS.structure,
+                  opacity: 0.85,
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          left: 220,
+          right: 220,
+          bottom: 210,
+          textAlign: "center",
+          fontFamily: sans.fontFamily,
+          fontSize: 22,
+          letterSpacing: "0.14em",
+          color: COLORS.muted,
+          opacity: line,
+        }}
+      >
+        先找缺席者 · 再谈成功学
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          bottom: 88,
           left: 0,
           right: 0,
           textAlign: "center",
@@ -894,7 +1003,11 @@ export const SurvivorshipBias: React.FC = () => {
   const titleDur = 6 * FPS;
   const transferDur = 8 * FPS;
   const askDur = 8 * FPS;
-  const closeDur = 10 * FPS;
+  // 金句段去尾部停留：10s → 6s；腾出 4s 给 outro
+  const closeDur = 6 * FPS;
+  const outroDur = 4 * FPS;
+  const closeFrom = 50 * FPS;
+  const outroFrom = closeFrom + closeDur;
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
@@ -932,9 +1045,14 @@ export const SurvivorshipBias: React.FC = () => {
           <AskScene />
         </FadeScene>
       </Sequence>
-      <Sequence from={50 * FPS} durationInFrames={closeDur} name="10-close">
-        <FadeScene durationInFrames={closeDur} fade={10}>
+      <Sequence from={closeFrom} durationInFrames={closeDur} name="10-close">
+        <FadeScene durationInFrames={closeDur} fade={8}>
           <CloseScene />
+        </FadeScene>
+      </Sequence>
+      <Sequence from={outroFrom} durationInFrames={outroDur} name="11-outro">
+        <FadeScene durationInFrames={outroDur} fade={8}>
+          <OutroScene />
         </FadeScene>
       </Sequence>
     </AbsoluteFill>

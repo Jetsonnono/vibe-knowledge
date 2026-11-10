@@ -50,14 +50,20 @@ const FullBgm: React.FC<{ durationInFrames: number }> = ({
     [1, 0.72, 0.76, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  // resolve：命中后轻 duck，避开 50.25–50.75 轻收窗（~1507–1522f）
+  // resolve：命中后轻 duck（金句段现为 50–56s）
   const duckClose = interpolate(
     frame,
-    [50 * FPS + 26, 50 * FPS + 34, 50 * FPS + 70, 50 * FPS + 100],
+    [50 * FPS + 18, 50 * FPS + 26, 50 * FPS + 55, 50 * FPS + 85],
     [1, 0.7, 0.75, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  volume *= duckDing * duckWrong * duckTitle * duckAsk * duckClose;
+  const duckOutro = interpolate(
+    frame,
+    [56 * FPS + 4, 56 * FPS + 12, 56 * FPS + 40, 56 * FPS + 70],
+    [1, 0.78, 0.8, 1],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+  volume *= duckDing * duckWrong * duckTitle * duckAsk * duckClose * duckOutro;
 
   return (
     <Audio
@@ -200,9 +206,17 @@ export const FullBeatAudio: React.FC = () => {
         <Audio src={sfx("ding")} volume={0.4} />
       </Sequence>
 
-      {/* 金句 */}
-      <Sequence from={50 * FPS + 24} durationInFrames={55} layout="none">
+      {/* 金句（50–56s，段已缩短） */}
+      <Sequence from={50 * FPS + 20} durationInFrames={50} layout="none">
         <Audio src={sfx("resolve")} volume={0.52} />
+      </Sequence>
+
+      {/* 56–60s outro 收束 */}
+      <Sequence from={56 * FPS + 6} durationInFrames={40} layout="none">
+        <Audio src={sfx("chime")} volume={0.32} />
+      </Sequence>
+      <Sequence from={56 * FPS + 55} durationInFrames={35} layout="none">
+        <Audio src={sfx("switch")} volume={0.22} />
       </Sequence>
     </AbsoluteFill>
   );
