@@ -7,7 +7,6 @@ function roof(w, d, mats, y = 0) {
   body.position.y = y
   g.add(body)
 
-  // Ridge + flared eaves suggestion
   const ridge = new THREE.Mesh(new THREE.BoxGeometry(w * 0.12, 0.28, d * 0.92), mats.tile)
   ridge.position.y = y + 0.28
   g.add(ridge)
@@ -45,8 +44,7 @@ function hall(w, d, h, mats, withDoor = true) {
     g.add(door)
   }
 
-  const r = roof(w * 1.12, d * 1.18, mats, h + 0.1)
-  g.add(r)
+  g.add(roof(w * 1.12, d * 1.18, mats, h + 0.1))
   return g
 }
 
@@ -57,7 +55,6 @@ function courtyardUnit(mats, scale = 1, { openAxis = false } = {}) {
   g.add(yard)
 
   if (openAxis) {
-    // Split north/south halls leave a walkable gate along Z for camera push
     for (const side of [-1, 1]) {
       const wingN = hall(3.2 * scale, 2.0 * scale, 2.4 * scale, mats, false)
       wingN.position.set(side * 3.1 * scale, 0, -4.2 * scale)
@@ -85,7 +82,6 @@ function courtyardUnit(mats, scale = 1, { openAxis = false } = {}) {
   west.position.x = -4.2 * scale
   g.add(west)
 
-  // Lanterns in yard corners
   for (const [x, z] of [
     [-2.5 * scale, -1.5 * scale],
     [2.5 * scale, -1.5 * scale],
@@ -98,7 +94,7 @@ function courtyardUnit(mats, scale = 1, { openAxis = false } = {}) {
     lamp.position.set(x, 1.55, z)
     g.add(pole, lamp)
 
-    const light = new THREE.PointLight(0xff9a3c, 1.8, 12, 1.8)
+    const light = new THREE.PointLight(0xff9a3c, 2.1, 13, 1.7)
     light.position.set(x, 1.55, z)
     g.add(light)
   }
@@ -106,23 +102,88 @@ function courtyardUnit(mats, scale = 1, { openAxis = false } = {}) {
   return g
 }
 
+/** Fortress wall with brick courses, battlement depth, rim-catching edges */
 function fortressWall(length, height, mats) {
   const g = new THREE.Group()
-  const wall = new THREE.Mesh(new THREE.BoxGeometry(4.2, height, length), mats.stone)
-  wall.position.y = height / 2
-  g.add(wall)
+  g.name = 'fortress-wall'
 
-  const merlonCount = Math.floor(length / 2.2)
+  const core = new THREE.Mesh(new THREE.BoxGeometry(3.6, height, length), mats.stone)
+  core.position.y = height / 2
+  g.add(core)
+
+  // Brick course relief on camera-facing (+X) side
+  const courseH = 0.42
+  const rows = Math.floor(height / courseH)
+  for (let r = 0; r < rows; r++) {
+    const offset = (r % 2) * 0.35
+    const bricks = Math.floor(length / 1.05)
+    for (let b = 0; b < bricks; b++) {
+      if (Math.random() < 0.08) continue
+      const brick = new THREE.Mesh(
+        new THREE.BoxGeometry(0.14 + Math.random() * 0.06, courseH * 0.88, 0.95),
+        Math.random() > 0.7 ? mats.brickDark : mats.brick,
+      )
+      brick.position.set(
+        1.88 + Math.random() * 0.05,
+        courseH * 0.5 + r * courseH,
+        -length / 2 + 0.55 + b * 1.05 + offset,
+      )
+      g.add(brick)
+    }
+  }
+
+  // Vertical pilasters / buttress rhythm
+  for (let z = -length / 2 + 4; z < length / 2; z += 8) {
+    const buttress = new THREE.Mesh(new THREE.BoxGeometry(1.4, height * 0.92, 1.6), mats.brickDark)
+    buttress.position.set(2.2, height * 0.46, z)
+    g.add(buttress)
+  }
+
+  // Merlons with depth + crenel gaps (silhouette)
+  const merlonCount = Math.floor(length / 2.0)
   for (let i = 0; i < merlonCount; i++) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.9, 1.1), mats.brick)
-    m.position.set(0, height + 0.35, -length / 2 + 1.2 + i * 2.2)
-    g.add(m)
+    const z = -length / 2 + 1.0 + i * 2.0
+    const merlon = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.15, 0.95), mats.brick)
+    merlon.position.set(0.15, height + 0.55, z)
+    g.add(merlon)
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.18, 1.1), mats.stone)
+    cap.position.set(0.15, height + 1.15, z)
+    g.add(cap)
+    // Foreground lip on camera side for rim light catch
+    const lip = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.0, 0.9), mats.brickLight)
+    lip.position.set(1.85, height + 0.5, z)
+    g.add(lip)
+    // Thin emissive rim catch on battlement crown
+    const rimCatch = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.08, 0.95),
+      new THREE.MeshStandardMaterial({
+        color: 0xffd2a8,
+        emissive: 0xffb080,
+        emissiveIntensity: 0.55,
+        roughness: 0.6,
+      }),
+    )
+    rimCatch.position.set(1.95, height + 1.12, z)
+    g.add(rimCatch)
   }
 
   // Watch tower mid-wall
   const tower = hall(5.5, 4.2, height * 0.55, mats)
-  tower.position.set(0.4, height * 0.35, 0)
+  tower.position.set(0.6, height * 0.35, 0)
   g.add(tower)
+
+  // Horse-face (马面) projection
+  const horse = new THREE.Mesh(new THREE.BoxGeometry(5.5, height * 0.85, 6), mats.stone)
+  horse.position.set(3.2, height * 0.42, 14)
+  g.add(horse)
+  const horseTop = roof(5.8, 5.2, mats, height * 0.85 + 0.2)
+  horseTop.position.set(3.2, 0, 14)
+  g.add(horseTop)
+
+  // Walkway ledge
+  const ledge = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.25, length * 0.98), mats.stone)
+  ledge.position.set(1.2, height - 0.1, 0)
+  g.add(ledge)
 
   return g
 }
@@ -137,45 +198,152 @@ function gateTower(mats) {
   arch.position.set(0, 1.7, 0)
   g.add(arch)
 
+  // Arch frame wood
+  const frameL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 3.5, 0.35), mats.wood)
+  frameL.position.set(-1.7, 1.75, 3.05)
+  const frameR = frameL.clone()
+  frameR.position.x = 1.7
+  const frameT = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.35, 0.35), mats.wood)
+  frameT.position.set(0, 3.5, 3.05)
+  g.add(frameL, frameR, frameT)
+
   const upper = hall(7.2, 5.2, 2.8, mats, false)
   upper.position.y = 5.5
   g.add(upper)
 
-  const top = roof(6.4, 4.6, mats, 9)
-  g.add(top)
+  g.add(roof(6.4, 4.6, mats, 9))
+
+  // Night lanterns on gate + soft fill so silhouette still reads
+  for (const x of [-2.4, 2.4]) {
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.26, 10, 10), mats.lantern)
+    lamp.position.set(x, 3.8, 3.2)
+    g.add(lamp)
+    const pl = new THREE.PointLight(0xff9a40, 3.2, 18, 1.4)
+    pl.position.set(x, 3.8, 3.2)
+    g.add(pl)
+  }
+  const gateFill = new THREE.PointLight(0xffb070, 3.4, 28, 1.4)
+  gateFill.position.set(0, 5.5, 7)
+  g.add(gateFill)
+  const gateUp = new THREE.PointLight(0xffc090, 2.6, 20, 1.35)
+  gateUp.position.set(0, 8.8, 2)
+  g.add(gateUp)
+  const gateFront = new THREE.SpotLight(0xffd2a8, 4.5, 30, 0.55, 0.45, 1.1)
+  gateFront.position.set(0, 6, 14)
+  gateFront.target.position.set(0, 4, 38)
+  g.add(gateFront, gateFront.target)
 
   return g
 }
 
+/** Rich carved relief wall + account-room door with light shaft gap */
 function brickCarvingWall(mats) {
   const g = new THREE.Group()
-  const wall = new THREE.Mesh(new THREE.BoxGeometry(6, 3.2, 0.5), mats.carving)
-  wall.position.y = 1.6
+  g.name = 'carving-set'
+
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(7.2, 3.6, 0.55), mats.carving)
+  wall.position.y = 1.8
   g.add(wall)
 
-  // Relief panels
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 2; j++) {
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 0.18), mats.carving)
-      panel.position.set(-1.8 + i * 1.8, 1.1 + j * 1.3, 0.28)
-      g.add(panel)
-      const detail = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.06, 8, 16), mats.wood)
-      detail.position.copy(panel.position)
-      detail.position.z += 0.12
-      g.add(detail)
+  // Side wood columns
+  for (const x of [-3.5, 3.5]) {
+    const col = new THREE.Mesh(new THREE.BoxGeometry(0.35, 3.8, 0.35), mats.woodPolish)
+    col.position.set(x, 1.9, 0.35)
+    g.add(col)
+  }
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.28, 0.4), mats.woodPolish)
+  beam.position.set(0, 3.7, 0.35)
+  g.add(beam)
+
+  // Extruded floral / geometric relief panels
+  const panelPositions = [
+    [-2.2, 2.4],
+    [2.2, 2.4],
+    [-2.2, 1.1],
+    [2.2, 1.1],
+  ]
+  for (const [px, py] of panelPositions) {
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(1.55, 1.2, 0.12), mats.carvingLight)
+    plate.position.set(px, py, 0.34)
+    g.add(plate)
+
+    // Concentric carved rings
+    for (let r = 0; r < 3; r++) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.18 + r * 0.14, 0.035, 6, 20),
+        mats.carvingDark,
+      )
+      ring.position.set(px, py, 0.42)
+      g.add(ring)
+    }
+
+    // Petal / diamond extrusions
+    for (let k = 0; k < 6; k++) {
+      const ang = (k / 6) * Math.PI * 2
+      const petal = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.08), mats.carvingDark)
+      petal.position.set(px + Math.cos(ang) * 0.42, py + Math.sin(ang) * 0.42, 0.44)
+      petal.rotation.z = ang
+      g.add(petal)
+    }
+
+    // Center boss
+    const boss = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.14, 10), mats.woodPolish)
+    boss.rotation.x = Math.PI / 2
+    boss.position.set(px, py, 0.46)
+    g.add(boss)
+  }
+
+  // Account room door with vertical gap for shaft light
+  const doorGroup = new THREE.Group()
+  doorGroup.position.set(0, 0, 0.4)
+
+  const jambL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.7, 0.22), mats.woodPolish)
+  jambL.position.set(-1.05, 1.35, 0)
+  const jambR = jambL.clone()
+  jambR.position.x = 1.05
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.28, 0.24), mats.woodPolish)
+  lintel.position.set(0, 2.75, 0)
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.18, 0.3), mats.stone)
+  sill.position.set(0, 0.12, 0.05)
+  doorGroup.add(jambL, jambR, lintel, sill)
+
+  // Two door leaves with gap between
+  const leafL = new THREE.Mesh(new THREE.BoxGeometry(0.92, 2.35, 0.1), mats.wood)
+  leafL.position.set(-0.52, 1.3, 0.06)
+  const leafR = new THREE.Mesh(new THREE.BoxGeometry(0.92, 2.35, 0.1), mats.wood)
+  leafR.position.set(0.52, 1.3, 0.06)
+  doorGroup.add(leafL, leafR)
+
+  // Door studs
+  for (const leaf of [leafL, leafR]) {
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 2; col++) {
+        const stud = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), mats.metal)
+        stud.position.set(leaf.position.x + (col - 0.5) * 0.35, 0.55 + row * 0.5, 0.14)
+        doorGroup.add(stud)
+      }
     }
   }
 
-  // Account room frame
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 0.2), mats.wood)
-  frame.position.set(0, 1.4, 0.45)
-  g.add(frame)
-  const paper = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.8, 2),
-    new THREE.MeshStandardMaterial({ color: 0xe8d9b8, emissive: 0xffcc88, emissiveIntensity: 0.35, roughness: 0.85 }),
+  // Warm interior glow plane behind gap
+  const glow = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.22, 2.2),
+    new THREE.MeshStandardMaterial({
+      color: 0xffe0a8,
+      emissive: 0xffb45a,
+      emissiveIntensity: 2.8,
+      roughness: 1,
+      transparent: true,
+      opacity: 0.95,
+    }),
   )
-  paper.position.set(0, 1.4, 0.56)
-  g.add(paper)
+  glow.position.set(0, 1.35, -0.05)
+  doorGroup.add(glow)
+
+  g.add(doorGroup)
+
+  // Roof eave over carving wall
+  g.add(roof(7.8, 2.2, mats, 3.9))
 
   return g
 }
@@ -188,39 +356,46 @@ export function buildArchitecture() {
   const root = new THREE.Group()
   root.name = 'wang-compound'
 
-  // Terrain
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(180, 180), mats.earth)
   ground.rotation.x = -Math.PI / 2
   ground.receiveShadow = true
   root.add(ground)
 
-  // Outer fortress wall (camera approaches from +X / courtyard side)
-  const wall = fortressWall(70, 6.5, mats)
+  const wall = fortressWall(72, 7.2, mats)
   wall.position.set(-24, 0, 0)
   root.add(wall)
 
-  // Gate tower at south approach
+  // Rim-catching accent light aimed at battlements (dusk silhouette)
+  const rim = new THREE.DirectionalLight(0xffc8a0, 1.35)
+  rim.position.set(18, 14, 8)
+  rim.target.position.set(-22, 7, 0)
+  root.add(rim, rim.target)
+  root.userData.rimLight = rim
+
+  // Warm ground bounce near wall
+  const bounce = new THREE.PointLight(0xff9a60, 1.6, 40, 2)
+  bounce.position.set(-16, 3.5, 6)
+  root.add(bounce)
+
   const gate = gateTower(mats)
   gate.position.set(0, 0, 38)
   root.add(gate)
 
-  // Secondary gate / Hongmenbao suggestion
   const gate2 = gateTower(mats)
   gate2.scale.set(0.75, 0.75, 0.75)
   gate2.position.set(-18, 0, 22)
   root.add(gate2)
 
-  // Courtyard grid — 五巷五堡 density (x≈0 open for night axis roam)
+  // Keep west side open for fortress camera corridor (wall at x≈-24)
   const layout = [
     [0, 8, 1.05, true],
     [14, 8, 0.9, false],
-    [-14, 8, 0.9, false],
     [0, -8, 1, true],
     [14, -8, 0.85, false],
-    [-14, -8, 0.85, false],
     [0, 22, 0.8, true],
     [12, 20, 0.7, false],
-    [-12, 20, 0.7, false],
+    [16, -20, 0.75, false],
+    [8, -22, 0.7, false],
   ]
   for (const [x, z, s, openAxis] of layout) {
     const c = courtyardUnit(mats, s, { openAxis })
@@ -228,55 +403,61 @@ export function buildArchitecture() {
     root.add(c)
   }
 
-  // Main axis halls for night push (高家崖)
-  const axisHalls = [
-    [0, 0, 1.15],
-    [0, -16, 1],
-    [0, 16, 0.95],
-  ]
-  // Door-frame occluders + axis lanterns for night push depth
+  // Door-frame occluders + axis lanterns
   for (let i = 0; i < 5; i++) {
     const z = 10 - i * 7
     const frame = new THREE.Group()
-    const left = new THREE.Mesh(new THREE.BoxGeometry(0.6, 3.8, 0.6), mats.brick)
-    left.position.set(-2.2, 1.9, 0)
+    const left = new THREE.Mesh(new THREE.BoxGeometry(0.55, 3.9, 0.55), mats.brick)
+    left.position.set(-2.15, 1.95, 0)
     const right = left.clone()
-    right.position.x = 2.2
-    const lintel = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.5, 0.6), mats.wood)
-    lintel.position.set(0, 3.9, 0)
-    frame.add(left, right, lintel)
+    right.position.x = 2.15
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.45, 0.55), mats.wood)
+    lintel.position.set(0, 4.0, 0)
+    // Side wings for stronger occluder silhouette
+    const wingL = new THREE.Mesh(new THREE.BoxGeometry(1.4, 3.2, 0.35), mats.plaster)
+    wingL.position.set(-3.2, 1.6, 0)
+    const wingR = wingL.clone()
+    wingR.position.x = 3.2
+    frame.add(left, right, lintel, wingL, wingR)
     frame.position.set(0, 0, z)
     root.add(frame)
 
-    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10), mats.lantern)
-    lamp.position.set(0, 3.2, z + 0.4)
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 10), mats.lantern)
+    lamp.position.set(0, 3.25, z + 0.4)
     root.add(lamp)
-    const axisLight = new THREE.PointLight(0xffa040, 2.0, 12, 1.6)
-    axisLight.position.set(0, 3.0, z + 0.4)
+    const axisLight = new THREE.PointLight(0xffa040, 2.4, 13, 1.5)
+    axisLight.position.set(0, 3.05, z + 0.4)
     root.add(axisLight)
   }
 
-  // Brick carving / account room set-piece near +X
+  // Brick carving / account room
   const carving = brickCarvingWall(mats)
   carving.position.set(22, 0, -2)
-  carving.rotation.y = -Math.PI * 0.15
+  carving.rotation.y = -Math.PI * 0.12
   root.add(carving)
-  const carvingLight = new THREE.SpotLight(0xffcc88, 4.5, 18, 0.55, 0.4, 1)
-  carvingLight.position.set(17, 4.5, 3)
-  carvingLight.target.position.set(22, 1.5, -2)
-  root.add(carvingLight, carvingLight.target)
-  const carvingFill = new THREE.PointLight(0xffb060, 2.2, 10, 1.5)
-  carvingFill.position.set(20, 2.2, 1)
+
+  // Shaft light through door gap
+  const shaft = new THREE.SpotLight(0xffd2a0, 8.5, 22, 0.18, 0.55, 1.2)
+  shaft.position.set(18.5, 3.2, 4.5)
+  shaft.target.position.set(22, 1.4, -2)
+  root.add(shaft, shaft.target)
+  root.userData.carvingShaft = shaft
+
+  const carvingKey = new THREE.SpotLight(0xffc090, 3.2, 16, 0.5, 0.45, 1)
+  carvingKey.position.set(16, 5, 2)
+  carvingKey.target.position.set(22, 2, -2)
+  root.add(carvingKey, carvingKey.target)
+
+  const carvingFill = new THREE.PointLight(0xffa060, 1.4, 9, 1.6)
+  carvingFill.position.set(20.5, 2.0, 1.2)
   root.add(carvingFill)
 
-  // Path stones along main axis
   for (let z = -24; z <= 34; z += 2.5) {
     const stone = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 1.8), mats.stone)
     stone.position.set(0, 0.06, z)
     root.add(stone)
   }
 
-  // Sparse trees outside wall
   for (let i = 0; i < 12; i++) {
     const t = new THREE.Group()
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.22, 2.2, 6), mats.wood)
@@ -287,11 +468,15 @@ export function buildArchitecture() {
     )
     canopy.position.y = 2.6
     t.add(trunk, canopy)
-    t.position.set(-38 - Math.random() * 8, 0, -30 + i * 6 + Math.random() * 2)
+    t.position.set(-40 - Math.random() * 8, 0, -30 + i * 6 + Math.random() * 2)
     root.add(t)
   }
 
   root.userData.mats = mats
   root.userData.gate = gate
+  root.userData.wall = wall
+  root.userData.carving = carving
+  root.userData.emberAnchor = { x: -20, y: 2, z: 4 }
+  root.userData.dustAnchor = { x: 21, y: 1.2, z: -1 }
   return root
 }

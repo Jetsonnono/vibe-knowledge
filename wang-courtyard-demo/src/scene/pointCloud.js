@@ -45,10 +45,10 @@ export function createGatePointCloud(gateObject) {
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
   const mat = new THREE.PointsMaterial({
-    size: 0.08,
+    size: 0.065,
     vertexColors: true,
     transparent: true,
-    opacity: 0.95,
+    opacity: 0.9,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     sizeAttenuation: true,

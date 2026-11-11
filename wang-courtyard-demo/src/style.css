@@ -1,7 +1,7 @@
 :root {
   --bg: #05040a;
-  --hud: rgba(245, 242, 235, 0.88);
-  --hud-dim: rgba(245, 242, 235, 0.45);
+  --hud: rgba(250, 248, 242, 0.94);
+  --hud-dim: rgba(250, 248, 242, 0.58);
   --rec: #e23b3b;
   --accent: #d4a574;
   --stage-max-w: min(100vw, 100vh * 9 / 16);
@@ -50,7 +50,9 @@ body {
   inset: 0;
   z-index: 2;
   color: var(--hud);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 12px rgba(0, 0, 0, 0.35);
 }
 
 .bracket {
@@ -94,10 +96,10 @@ body {
 .hud-bottom-left,
 .hud-bottom-right {
   position: absolute;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  line-height: 1.45;
-  opacity: 0.92;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  line-height: 1.5;
+  opacity: 0.96;
 }
 
 .hud-top-left {
@@ -113,13 +115,14 @@ body {
 }
 
 .scan-label {
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  font-weight: 500;
 }
 
 .rec-row {
-  margin-top: 4px;
-  font-size: 11px;
+  margin-top: 5px;
+  font-size: 12px;
 }
 
 .rec-dot {
@@ -153,20 +156,26 @@ body {
 
 .chapter-card {
   position: absolute;
-  top: 18%;
-  left: 12%;
+  top: 16%;
+  left: 11%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
-  max-width: 46%;
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  gap: 12px;
+  max-width: 48%;
+  transition: opacity 0.9s ease, transform 0.9s ease;
 }
 
 .chapter-card.hidden {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(10px);
   pointer-events: none;
+}
+
+.chapter-card.swap {
+  transition: none;
+  opacity: 0;
+  transform: translateY(6px);
 }
 
 .chapter-zh {
@@ -174,25 +183,28 @@ body {
   text-orientation: upright;
   font-family: "Noto Serif SC", "Songti SC", serif;
   font-weight: 700;
-  font-size: clamp(28px, 7.2vw, 52px);
-  letter-spacing: 0.22em;
-  line-height: 1.15;
-  color: rgba(255, 252, 245, 0.95);
+  font-size: clamp(30px, 7.6vw, 56px);
+  letter-spacing: 0.24em;
+  line-height: 1.12;
+  color: rgba(255, 252, 245, 0.98);
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.75),
+    0 0 24px rgba(0, 0, 0, 0.35);
 }
 
 .chapter-en {
-  font-size: clamp(10px, 2.4vw, 13px);
-  letter-spacing: 0.22em;
-  color: rgba(255, 236, 210, 0.82);
+  font-size: clamp(11px, 2.5vw, 14px);
+  letter-spacing: 0.24em;
+  color: rgba(255, 240, 220, 0.9);
   text-transform: uppercase;
 }
 
 .chapter-sub {
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   color: var(--hud-dim);
-  max-width: 18ch;
-  line-height: 1.5;
+  max-width: 20ch;
+  line-height: 1.55;
 }
 
 #pause-btn {

@@ -6,12 +6,12 @@ const OUT = process.argv[2] || '/cursor/stores/bc-5a9c8b79-f789-453d-83c8-bdb185
 const URL = process.env.DEMO_URL || 'http://127.0.0.1:5173/'
 
 const shots = [
-  { file: '01-pointcloud-gate.png', seek: 4 },
-  { file: '02-fortress-court.png', seek: 16 },
-  { file: '03-five-lanes.png', seek: 28 },
-  { file: '04-gaojia-night.png', seek: 42 },
-  { file: '05-brick-carving.png', seek: 55 },
-  { file: '06-closing-aerial.png', seek: 68 },
+  { file: '01-pointcloud-gate-v2.png', seek: 5 },
+  { file: '02-fortress-court-v2.png', seek: 16.5 },
+  { file: '03-five-lanes-v2.png', seek: 30 },
+  { file: '04-gaojia-night-v2.png', seek: 42 },
+  { file: '05-brick-carving-v2.png', seek: 52.5 },
+  { file: '06-closing-gate-orbit-v2.png', seek: 69 },
 ]
 
 fs.mkdirSync(OUT, { recursive: true })
@@ -33,15 +33,13 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage()
 await page.goto(URL, { waitUntil: 'networkidle0', timeout: 60000 })
 await page.waitForFunction(() => window.__WANG_DEMO__, { timeout: 30000 })
-// Warm up a few frames
-await sleep(800)
+await sleep(1000)
 
 for (const s of shots) {
   await page.evaluate((t) => {
     window.__WANG_DEMO__.seek(t)
   }, s.seek)
-  // allow a few render frames
-  await sleep(700)
+  await sleep(900)
   const dest = path.join(OUT, s.file)
   await page.screenshot({ path: dest, type: 'png' })
   console.log('wrote', dest)

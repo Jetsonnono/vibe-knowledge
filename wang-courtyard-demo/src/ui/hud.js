@@ -32,7 +32,7 @@ export function createHUD() {
     el.timer.textContent = formatTimer(t)
 
     const ch = chapterAt(t)
-    const recon = Math.min(99, Math.floor(18 + sample.pc * 78 + (t % 3)))
+    const recon = Math.min(99, Math.floor(18 + sample.pc * 78 + Math.sin(t) * 1.5))
     const cloud = Math.floor(baseCloud + sample.pc * 1_860_000 + Math.sin(t * 2.1) * 4000)
     el.pcCount.textContent = cloud.toLocaleString('en-US')
     el.pcPct.textContent = String(recon).padStart(2, '0')
@@ -44,12 +44,15 @@ export function createHUD() {
     if (hdg < 0) hdg += 360
     el.hdg.textContent = hdg.toFixed(1)
 
+    // Soft fade windows — card appears after dissolve settles
     const showCard = t >= ch.cardFrom && t <= ch.cardTo
     if (ch.id !== lastChapterId) {
       el.zh.textContent = ch.zh
       el.en.textContent = ch.en
       el.sub.textContent = ch.sub
       lastChapterId = ch.id
+      el.card.classList.add('swap')
+      requestAnimationFrame(() => el.card.classList.remove('swap'))
     }
     el.card.classList.toggle('hidden', !showCard)
   }

@@ -15,10 +15,10 @@ Open the printed local URL (portrait stage ~9:16). Tap **Ⅱ** to pause autoplay
 ## Chapters
 
 1. Point-cloud gate → **王家大院**
-2. Fortress wall dusk push → **堡院 / THE FORTRESS COURT**
-3. Aerial grey-tile courtyards → **五巷五堡**
+2. Fortress wall dusk push → **堡院 / THE FORTRESS COURT** (brick relief, embers, rim light)
+3. Aerial grey-tile courtyards → **五巷五堡** (only aerial beat)
 4. Night main court axis → **高家崖**
-5. Brick carving / account room → **三雕 · 账房**
-6. Closing aerial → **中国民居艺术馆**
+5. Brick carving / account room → **三雕 · 账房** (extruded relief, shaft light, gold dust)
+6. Closing night gate orbit → **中国民居艺术馆** (eye-level slow orbit — not aerial)
 
-Loop ≈ 75s. Debug seek: `window.__WANG_DEMO__.seek(seconds)`.
+Loop ≈ 78s. Chapter edges use a soft point-cloud dissolve. Debug: `window.__WANG_DEMO__.seek(seconds)`.
