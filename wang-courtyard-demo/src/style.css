@@ -1,0 +1,241 @@
+:root {
+  --bg: #05040a;
+  --hud: rgba(245, 242, 235, 0.88);
+  --hud-dim: rgba(245, 242, 235, 0.45);
+  --rec: #e23b3b;
+  --accent: #d4a574;
+  --stage-max-w: min(100vw, 100vh * 9 / 16);
+  --stage-max-h: min(100vh, 100vw * 16 / 9);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 30%, #1a1428 0%, transparent 55%),
+    linear-gradient(180deg, #0b0912 0%, #05040a 100%);
+  font-family: "Share Tech Mono", ui-monospace, monospace;
+}
+
+#stage {
+  position: relative;
+  width: var(--stage-max-w);
+  height: var(--stage-max-h);
+  margin: 0 auto;
+  background: #000;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 80px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+#c {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#hud {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  color: var(--hud);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.bracket {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--hud);
+  opacity: 0.85;
+}
+
+.bracket.tl {
+  top: 18px;
+  left: 18px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.bracket.tr {
+  top: 18px;
+  right: 18px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.bracket.bl {
+  bottom: 18px;
+  left: 18px;
+  border-right: none;
+  border-top: none;
+}
+
+.bracket.br {
+  bottom: 18px;
+  right: 18px;
+  border-left: none;
+  border-top: none;
+}
+
+.hud-top-left,
+.hud-top-right,
+.hud-bottom-left,
+.hud-bottom-right {
+  position: absolute;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  opacity: 0.92;
+}
+
+.hud-top-left {
+  top: 28px;
+  left: 36px;
+  color: var(--hud-dim);
+}
+
+.hud-top-right {
+  top: 28px;
+  right: 36px;
+  text-align: right;
+}
+
+.scan-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.rec-row {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.rec-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--rec);
+  box-shadow: 0 0 8px var(--rec);
+  animation: blink 1.1s steps(1) infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+.hud-bottom-left {
+  bottom: 28px;
+  left: 36px;
+}
+
+.hud-bottom-right {
+  bottom: 28px;
+  right: 36px;
+  text-align: right;
+}
+
+.chapter-card {
+  position: absolute;
+  top: 18%;
+  left: 12%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 46%;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.chapter-card.hidden {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.chapter-zh {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-weight: 700;
+  font-size: clamp(28px, 7.2vw, 52px);
+  letter-spacing: 0.22em;
+  line-height: 1.15;
+  color: rgba(255, 252, 245, 0.95);
+}
+
+.chapter-en {
+  font-size: clamp(10px, 2.4vw, 13px);
+  letter-spacing: 0.22em;
+  color: rgba(255, 236, 210, 0.82);
+  text-transform: uppercase;
+}
+
+.chapter-sub {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--hud-dim);
+  max-width: 18ch;
+  line-height: 1.5;
+}
+
+#pause-btn {
+  position: absolute;
+  z-index: 3;
+  right: 16px;
+  bottom: 72px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+#pause-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#hint {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .hud-top-left,
+  .hud-top-right,
+  .hud-bottom-left,
+  .hud-bottom-right {
+    font-size: 9px;
+  }
+
+  #hint {
+    display: none;
+  }
+}

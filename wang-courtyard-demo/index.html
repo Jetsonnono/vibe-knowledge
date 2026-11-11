@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>王家大院 · WANG COURTYARD VR SCAN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="stage">
+      <canvas id="c"></canvas>
+      <div id="hud" aria-hidden="true">
+        <div class="bracket tl"></div>
+        <div class="bracket tr"></div>
+        <div class="bracket bl"></div>
+        <div class="bracket br"></div>
+
+        <div class="hud-top-left">
+          <div>VIEW · CINEMATIC</div>
+          <div>SCAN MODE ON</div>
+        </div>
+
+        <div class="hud-top-right">
+          <div class="scan-label">WANG COURTYARD | VR SCAN</div>
+          <div class="rec-row"><span class="rec-dot"></span> REC <span id="rec-timer">00:00:00</span></div>
+        </div>
+
+        <div class="hud-bottom-left">
+          <div>POINT CLOUD <span id="pc-count">0,000,000</span></div>
+          <div>RECONSTRUCTION <span id="pc-pct">00</span>%</div>
+        </div>
+
+        <div class="hud-bottom-right">
+          <div>36°50'N 111°46'E</div>
+          <div>ALT <span id="alt">0782.4</span> M · HDG <span id="hdg">012.0</span>°</div>
+        </div>
+
+        <div id="chapter-card" class="chapter-card hidden">
+          <div class="chapter-zh" id="chapter-zh"></div>
+          <div class="chapter-en" id="chapter-en"></div>
+          <div class="chapter-sub" id="chapter-sub"></div>
+        </div>
+      </div>
+
+      <button id="pause-btn" type="button" title="Pause / Orbit">Ⅱ</button>
+      <div id="hint">AUTO ROAM · tap Ⅱ to orbit</div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
